@@ -24,6 +24,7 @@ class XBeePlus
 		bool sendApiframe(uint8_t *, uint8_t, uint8_t);
 		bool ready();
 		bool CTS();
+		void meetCoordinator();
 	private:
 		ZBTxStatusResponse txStatus;
 		XBeeAddress64 addr64;

@@ -38,7 +38,11 @@ void setup(){
   #endif
   
   xbee.sendIDs(&sensorhub.ids[0], UUID_WIDTH*NUM_SENSORS);
-  
+  xbee.refresh();
+  while(!xbee.available()){
+    xbee.refresh();
+  }
+  xbee.meetCoordinator();
 }
 
 

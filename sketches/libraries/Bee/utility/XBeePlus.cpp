@@ -63,6 +63,16 @@ bool XBeePlus::available()
 	return _xbee.getResponse().isAvailable();
 }
 
+void XBeePlus::meetCoordinator()
+{
+        //XBeeAddress64 tmp = 
+	_xbee.getResponse().getZBRxResponse(rx);//.getRemoteAddress64();
+        XBeeAddress64 tmp = rx.getRemoteAddress64();
+	Serial.print("COORDINATOR ADDRESS:" );
+	addr64.setMsb(tmp.getMsb());
+        addr64.setLsb(tmp.getLsb());
+}
+
 uint8_t * XBeePlus::getData(){
 	_xbee.getResponse().getZBRxResponse(rx);
 	//#ifdef DEBUG
@@ -96,7 +106,7 @@ bool XBeePlus::sendApiframe(uint8_t *arrayPointer, uint8_t arrayLength, uint8_t 
 		
                 arr[i+1]=arrayPointer[i];
         }
-        return send(&arr[0], arrayLength+1);
+        return send(&arr[0], arrayLength+1,addr64.getMsb(), addr64.getLsb());
 }
 
 #define DEBUG
