@@ -10,6 +10,8 @@ Or you can use this repository to set it up from scratch. This is particularly u
 ##Download Xmegaduino IDE
 First you need to download the arduino-1.0.1-rx2-xmegaduino-beta4b. What's important here is that we are still using arduino-1.0.1 (1.5 isn't quite stable yet) but that you have a more recent toolchain than the beta4 release.
 
+TODO: provide download link for all platforms
+
 ##Add in our libraries
 
 (1) Edit the board.txt file. Add the following at the top, bottom, middle, or anywhere really.
