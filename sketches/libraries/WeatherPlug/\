@@ -1,0 +1,226 @@
+#include <Sensorhub.h>
+#include <Wire.h>
+#include <WeatherPlug.h>
+#include <AlphaBee.h>
+
+#include <avr/io.h>
+#include <avr/interrupt.h>
+
+////////////////////////////////////////////////////////////////////////
+//	Weather Plug shared
+////////////////////////////////////////////////////////////////////////
+void WeatherPlug::init(){
+	if(!initialized) 
+	{
+		Serial.println("initializing");
+		I2C_BEGIN();
+		i2cChannel(1);
+
+		cli();
+		//pinMode(7,INPUT);
+        	//pinMode(7,LOW);
+      		PORTB_INT0MASK = 0b100; // give PIN2 the PORTB INT0 interrupt
+        	PORTB_INTCTRL = 0b1; // makes PORTB INT0 a low level interrupt
+		
+        	PORTD_INT0MASK = 0b100; // give PIN2 the PORTD INT0 interrupt
+       		PORTD_INTCTRL = 0b1; // makes PORTD INT0 a low level interrupt
+		PMIC_CTRL |= 0b1; //globally enable low level interrupts  
+	  
+		sei();
+		initialized=true;
+	}
+};
+void WeatherPlug::i2cChannel(uint8_t channel){
+	while(!I2C_READY());
+	I2C_BEGIN_TRANSMIT(PCA9540);
+	I2C_WRITE((byte) 1<<channel );
+	I2C_END_TRANSMIT(); 
+	delay(I2C_DELAY);
+};
+
+//if we re enable I2C via the library, we'll waste a lot of memory!
+void WeatherPlug::enableI2C(){
+	unsigned long twiSpeed=0; 
+	unsigned long twiBaudrate=0;
+  
+	PORTC.PIN0CTRL = 0x38;    
+	PORTC.PIN1CTRL = 0x38;
+  
+	TWIC.MASTER.CTRLA = TWI_MASTER_INTLVL_LO_gc 
+		| TWI_MASTER_RIEN_bm 
+		| TWI_MASTER_WIEN_bm 
+		| TWI_MASTER_ENABLE_bm;
+  	twiSpeed=400000UL;
+	twiBaudrate=(F_CPU/(twiSpeed<<2))-5UL;
+	TWIC.MASTER.BAUD=(uint8_t)twiBaudrate;
+	TWIC.MASTER.STATUS=TWI_MASTER_BUSSTATE_IDLE_gc;  
+};
+void WeatherPlug::disableI2C(){
+	TWIC.MASTER.CTRLB = 0;
+	//TWIC.MASTER.BAUD = 0;
+	TWIC.MASTER.CTRLA = 0;
+	//TWIC.MASTER.STATUS = 0;
+};
+
+WeatherPlug weatherPlug;
+
+
+////////////////////////////////////////////////////////////////////////
+//	WIND DIRECTION DRIVERS
+////////////////////////////////////////////////////////////////////////
+uint16_t WeatherPlug::windDirCutoffs[NUM_WIND_CUTOFFS] = {46,   88, 144, 201,   244, 339,   465, 621,  754,   844, 1038,  1341, 1658,  1847, 1995};
+float WeatherPlug::windDirMappings[NUM_WIND_MAPPINGS] =   {270, 315,   0, 337.5, 225, 247.5,  45, 22.5, 292.5, 180, 202.5,  135, 157.5,   90, 67.5, 112.5};
+
+float WeatherPlug::mapWindDirection(uint16_t val){
+	for(int i=0;i<15;i++)   if(val<windDirCutoffs[i])   return windDirMappings[i];
+	return windDirMappings[15];
+};
+
+float WeatherPlug::getWindDirection(){
+	I2C_BEGIN_TRANSMIT(ADS7828);
+	I2C_WRITE((byte)0b01);
+	I2C_END_TRANSMIT();
+	delay(I2C_DELAY);
+	  
+	I2C_BEGIN_TRANSMIT(ADS7828);
+	I2C_WRITE((byte)0b01);
+	I2C_WRITE((byte)0b11110101);
+	I2C_WRITE((byte)0b10000011);
+	I2C_END_TRANSMIT();
+	delay(I2C_DELAY);
+	  
+	I2C_BEGIN_TRANSMIT(ADS7828);
+	I2C_WRITE((byte)0b01);
+	I2C_END_TRANSMIT();
+	delay(I2C_DELAY);
+	    
+	    
+	I2C_BEGIN_TRANSMIT(ADS7828);
+	I2C_WRITE((byte)0b00);
+	I2C_END_TRANSMIT();
+	delay(I2C_DELAY);
+	  
+	I2C_REQUEST(ADS7828,2);
+	delay(I2C_DELAY);
+	uint16_t data = I2C_READ()<<8;
+	
+	data |=I2C_READ();
+	data >>=4;
+
+	return mapWindDirection(data); 
+};
+
+//SENSORHUB WRAPPERS
+String WindDirection::getName(){ return "Wind Direction: "; }
+String WindDirection::getUnits(){ return " degrees";}
+ 
+void WindDirection::init(){ clock.begin(DateTime(__DATE__, __TIME__)); weatherPlug.init();   }
+
+void WindDirection::getData(){
+	float sample = weatherPlug.getWindDirection();
+	uint16_t tmp = (sample + WIND_DIR_SHIFT) * WIND_DIR_SCALE;
+	data[1]=tmp>>8;
+	data[0]=tmp;
+}
+
+////////////////////////////////////////////////////////////////////////
+//	WIND SPEED DRIVERS
+////////////////////////////////////////////////////////////////////////
+//	note the ISR below this class
+
+void WeatherPlug::startWind(){
+  clock.getDate();
+  W_sec = clock.second;
+  W_min = clock.minute;
+  W_hour = clock.hour;
+
+}
+
+// 1 click / second = 2.4 km/h
+// this function returns a scalar so that clicks * coeff = km/hour
+float WeatherPlug::getWindCoeff(){
+	clock.getDate();
+	uint16_t second = clock.second - W_sec;
+	uint8_t minute = clock.minute - W_min;
+	uint8_t hour = clock.hour - W_hour;
+  	if(hour<0) hour = 24 + hour;
+	uint16_t secondsElapsed = (hour*60 + minute)*60 + second;
+	
+  	float coeff = 2.4/(secondsElapsed) ;
+
+  	return coeff;
+}
+
+float WeatherPlug::getWindSpeed(){
+	return windCount*getWindCoeff();
+
+}
+
+//SENSORHUB WRAPPERS
+String WindSpeed::getName() { return "Wind Speed: "; }
+String WindSpeed::getUnits() { return " km/h"; }
+
+void WindSpeed::init()
+{
+	weatherPlug.init();
+	weatherPlug.startWind();
+};
+void WindSpeed::getData(){
+	uint32_t tmp = weatherPlug.getWindSpeed()*WIND_SPEED_SCALE;
+        data[3]=tmp>>24;
+	data[2]=tmp>>16;
+	data[1]=tmp>>8;
+        data[0]=tmp;
+	weatherPlug.startWind();
+};
+
+
+//DRIVERS
+ISR(PORTD_INT0_vect){
+  weatherPlug.windCount++;
+};
+
+float WeatherPlug::getRainfall(){
+	uint32_t count = rainCount/8.0;
+	rainCount=0;
+	float ret = count * 0.2794;
+	return ret;
+}
+
+
+//SENSORHUB WRAPPERS
+String Rainfall::getName() { return "Rain Fall: "; };
+String Rainfall::getUnits() {return " mm";};
+
+void Rainfall::init() { weatherPlug.init(); }
+
+void Rainfall::getData(){
+    uint16_t rain = (weatherPlug.getRainfall()*getScalar()+getShift() );
+    //unsual shifts here to divide by two
+    data[3]=rain>>24; 
+    data[2]=rain>>16;
+    data[1]=rain>>8;
+    data[0]=rain; 
+}
+
+
+ISR(PORTB_INT0_vect){
+  weatherPlug.rainCount++;
+};
+
+//SENSORHUB WRAPPER FOR BMP
+
+String BMP_Temperature::getName() { return "BMP Temperature: "; };
+String BMP_Temperature::getUnits() {return " *C";};
+
+void BMP_Temperature::init() { weatherPlug.init(); }
+
+void BMP_Temperature::getData(){
+    //weatherPlug.bmp.begin()
+    //delay(100);
+    //uint16_t rain = (weatherPlug.bmp.readTemperature()*getScalar()+getShift() );
+    uint16_t rain=0xFFFF;
+	data[1]=rain>>8;
+    data[0]=rain;
+};
+

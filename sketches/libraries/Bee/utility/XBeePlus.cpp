@@ -1,0 +1,155 @@
+#include <stdint.h>
+#include "Arduino.h"
+
+#include "XBee.h"
+#include "XBeePlus.h"
+
+#define DEBUG
+
+#define SET_BIT(p,n) ((p) |= (1 << (n)))
+#define CLR_BIT(p,n) ((p) &= (~(1) << (n)))
+
+#define CTS_PORT PORTF
+#define CTS_PIN 3
+
+//CONSTRUCTOR
+////////////////////////////////////////////////////////////////////////////
+XBeePlus::XBeePlus()
+{
+	XBee _xbee = XBee();
+	ZBRxResponse rx = ZBRxResponse();
+	XBeeAddress64 addr64 = XBeeAddress64(0x12345678, 0xABCDEF12);
+	ZBTxStatusResponse txStatus = ZBTxStatusResponse();
+}
+
+//PUBLIC METHODS
+////////////////////////////////////////////////////////////////////////////
+void XBeePlus::begin(long baud)
+{
+
+	_baud = baud;
+	PORTF.DIR |= PIN3_bm;
+	PORTF.OUTCLR |= PIN3_bm;
+	Serial4.begin(baud);
+	_xbee.setSerial(Serial4);
+
+}
+
+bool XBeePlus::CTS(){
+	return !(PORTF.IN>>3&0b1);
+}
+
+bool XBeePlus::ready(){
+	return CTS();
+}
+
+void XBeePlus::enable(){
+	PORTF.OUTCLR|=PIN3_bm;
+	Serial4.flush();
+	//Serial4.begin(_baud);
+}
+
+void XBeePlus::disable(){
+	PORTF.OUT|=PIN3_bm;
+}
+
+void XBeePlus::refresh()
+{
+	_xbee.readPacket();	
+}
+
+bool XBeePlus::available()
+{
+	return _xbee.getResponse().isAvailable();
+}
+
+uint8_t * XBeePlus::getData(){
+	_xbee.getResponse().getZBRxResponse(rx);
+	//#ifdef DEBUG
+	for(int i=0; i< rx.getDataLength();i++){
+	  Serial.print(rx.getData(i),HEX);
+          Serial.print(",");  
+        }
+	Serial.println();
+	//#endif
+	uint8_t dataLength = rx.getDataLength();
+	data[0] = rx.getData(dataLength-2);
+	data[1] = rx.getData(dataLength-1);
+	return &data[0];
+}
+
+#define ID_FRAME 0b0001
+#define DATA_FRAME 0b0010
+
+bool XBeePlus::sendIDs(uint8_t * arrayPointer, uint8_t arrayLength){
+	sendApiframe(arrayPointer, arrayLength, ID_FRAME);	
+}
+
+bool XBeePlus::sendData(uint8_t * arrayPointer, uint8_t arrayLength){
+	sendApiframe(arrayPointer, arrayLength, DATA_FRAME);
+}
+
+bool XBeePlus::sendApiframe(uint8_t *arrayPointer, uint8_t arrayLength, uint8_t frame){
+	uint8_t arr[arrayLength+1];
+        arr[0]=frame;
+        for(uint8_t i=0; i<arrayLength; i++){
+		
+                arr[i+1]=arrayPointer[i];
+        }
+        return send(&arr[0], arrayLength+1);
+}
+
+#define DEBUG
+bool XBeePlus::send(uint8_t * arrayPointer, uint8_t arrayLength, uint32_t addr64_MSB, uint32_t addr64_LSB){
+	addr64.setMsb(addr64_MSB);
+	addr64.setLsb(addr64_LSB);
+	ZBTxRequest zbTx = ZBTxRequest(addr64, arrayPointer, arrayLength);
+	//zbTx.setOption(0xAAAA);	
+	Serial.print("Option: ");	
+	Serial.println(zbTx.getOption());
+	_xbee.send(zbTx);	
+
+  	if (_xbee.readPacket(5000)){
+		uint8_t API_ID = _xbee.getResponse().getApiId();
+    		if (API_ID == 89) {
+      			_xbee.getResponse().getZBTxStatusResponse(txStatus);
+	        	// get the delivery status, the fifth byte
+      			if (txStatus.getDeliveryStatus() == SUCCESS) {
+				#ifdef DEBUG
+				Serial.println("success");
+				#endif	
+				// success.  time to celebrate			
+				return true;
+        			
+        			
+      			} else {
+        			//the remote XBee did not receive our packet. is it powered on?
+				#ifdef DEBUG				
+				Serial.println("fail");
+				#endif
+				return false;        			
+
+      			}
+    		}
+		else{
+			Serial.print("Wrong API_ID: ");
+			Serial.println(API_ID);
+			return false;
+		}
+		
+  	} else if (_xbee.getResponse().isError()) {
+		#ifdef DEBUG
+		Serial.print("Error reading packet.  Error code: ");  
+		Serial.println(_xbee.getResponse().getErrorCode());
+		return false;
+		#endif
+  	} else { // time elapsed with no answer
+    		#ifdef DEBUG
+		Serial.println("untimely response");
+		return false;
+		#endif
+  	}	
+}
+
+XBeePlus xbee;
+
