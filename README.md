@@ -40,3 +40,8 @@ Note that we assumed that this repository and the Xmegaduino are both in your ho
 (3) Open up the Xmegaduino IDE and go to: `File-->Preferences` and make the sketchbook location the `sketches` directory in this repository. Restart the IDE and all the libraries will be loaded.
 
 Now you're good to go!
+
+#Improvements to Think of
+* changing sample rates (and other settings) remotely
+* add automation to framework; how does it interact with sensors?
+
