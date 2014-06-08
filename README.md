@@ -14,7 +14,8 @@ First you need to download the arduino-1.0.1-rx2-xmegaduino-beta4b. What's impor
 
 ##Add in our libraries
 
-(1) Edit the board.txt file in ```~/arduino-1.0.1-rx2-xmegaduino-beta4b/hardware/xmegaduino/```. Add the following at the top, bottom, middle, or anywhere really.
+(1) Edit the boards.txt file in ```~/arduino-1.0.1-rx2-xmegaduino-beta4b/hardware/xmegaduino/```. Add the following at the top, bottom, middle, or anywhere really. For Mac, once Arduino is moved into Applications, boards.txt will be in ```/Applications/Arduino.app/Contents/Resources/Java/hardware/xmegaduino/```.
+
 ```
 ##############################################################
 
