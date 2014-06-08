@@ -137,7 +137,7 @@ class Sensorhub
 		Sensor** sensors;
 		uint8_t _size;
 		uint8_t sizeOfData;
-		uint8_t _findTotalSize(){
+		const uint8_t _findTotalSize(){
 			uint8_t dataSize=0;
 			for (int i=0; i<_size;i++){
 				dataSize+=sensors[i]->getSize();
@@ -151,6 +151,14 @@ class Sensorhub
 			_size = numSensors;
 			sizeOfData=_findTotalSize();
 			_count=0;
+			/*sizeOfData[&]{
+	                        const uint8_t sizeOfData = 0;
+				uint8_t dataSize=0;
+        	                for (int i=0; i<_size;i++) dataSize+=sensors[i]->getSize();
+				sizeOfData = dataSize;
+                        }*/
+			//sizeOfData=0;
+
 			
 			for(uint8_t i=0; i<_size; i++){
 				uint16_t uuid = sensors[i]->getUUID();
@@ -163,20 +171,20 @@ class Sensorhub
 			for (int i=0; i<_size;i++) sensors[i]->init();
 		}
 	
-		void sample(){
+		void sample(bool print=false){
 			for (int i=0; i<_size;i++){
 				if (_count%sensors[i]->getSamplePeriod()==0)
-					sensors[i]->sample();
+					sensors[i]->sample(print);
 			}
 			_count++;
 		}
 
 		uint8_t data[MAX_DATA_SIZE*MAX_SENSORS];//this implies that we are limited to 32 sensors at the moment
 		uint8_t ids[UUID_WIDTH*MAX_SENSORS];
-		void log(){
+		void log(bool print = false){
 			uint16_t index = 0;
 			for (int i=0; i<_size;i++) {
-				sensors[i]->log(true);
+				sensors[i]->log(print);
 				uint8_t sensorDataSize = sensors[i]->getSize();
 				//flipping MSB and LSB!
 				for (int j=sensorDataSize-1; j>=0 ;j--){
@@ -186,7 +194,7 @@ class Sensorhub
 			_count=0;
 		}
 		
-		uint8_t getDataSize(){	return sizeOfData;	};
+		const uint8_t getDataSize(){	return sizeOfData;	};
 		uint16_t _count;
 };
 #endif

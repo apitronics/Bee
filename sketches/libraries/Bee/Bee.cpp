@@ -4,8 +4,10 @@
 #include "utility/XBeePlus.h"
 #include "utility/Clock.h"
 #include "utility/RTClib.h"
+#include "utility/Onboard.h"
 
 #include "Bee.h"
+
 
 enum
 {
@@ -17,7 +19,7 @@ enum
 #define LOW_LVL_INT 0b1
 
 void configureSleep(){
-	
+	onboard.setupBattSense();	
 	cli();
 	//PORTF.DIRCLR=PIN2_bm;
 	PORTF_INT0MASK = PIN2_bm; // give PIN2 the INT0 interrupt
@@ -41,10 +43,9 @@ void sleep(){
 	sleep_disable();
 
 	clock.getFlags();
-	//Serial.print("wake up: ");
-	//clock.alarmFlag();
-	//Serial.println(clock.alarmFlag());
-	//i used to clear clock status register here
+	
+	//battery needs to be protected from overextension	
+	while(onboard.getBatt()<8.5) _goToSleep();
 }
 
 void _goToSleep(){

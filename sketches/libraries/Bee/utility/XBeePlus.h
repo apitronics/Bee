@@ -18,7 +18,7 @@ class XBeePlus
 		void refresh();
 		bool available();
 		uint8_t * getData();
-		bool send(uint8_t *, uint8_t,uint32_t addr64_MSB=0x0, uint32_t addr_LSB=0xFFFF);
+		bool send(uint8_t *, uint8_t,uint32_t addr64_MSB=0x0, uint32_t addr_LSB=0xFF);
 		bool sendIDs(uint8_t *, uint8_t);
 		bool sendData(uint8_t *, uint8_t);
 		bool sendApiframe(uint8_t *, uint8_t, uint8_t);

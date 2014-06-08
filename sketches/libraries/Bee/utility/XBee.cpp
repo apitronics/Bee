@@ -804,10 +804,8 @@ void XBee::flush() {
 } 
 
 void XBee::write(uint8_t val) {
-	Serial.print(val);
-	Serial.print(" ,");
 	_serial->write(val);
-	delay(1);
+	delay(1); //awful fix but can't find the pb
 }
 
 XBeeResponse& XBee::getResponse() {

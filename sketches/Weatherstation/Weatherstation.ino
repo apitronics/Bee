@@ -21,6 +21,7 @@ Sensor * sensor[] = {&onboardTemp, &batteryGauge, &BMP_temp,&BMP_press, &windDir
 Sensorhub sensorhub(sensor,NUM_SENSORS);
 
 void setup(){
+  delay(1000);
   pinMode(5,OUTPUT);
   digitalWrite(5,HIGH);
   Serial.begin(57600);
@@ -41,41 +42,40 @@ void setup(){
   Serial.println();
   
   Serial.println("starting");
+  
   sensorhub.init();
   
-  xbee.sendIDs(&sensorhub.ids[0], UUID_WIDTH*NUM_SENSORS);
+  //send IDs packet until reception is acknowledged
+  while(!xbee.sendIDs(&sensorhub.ids[0], UUID_WIDTH*NUM_SENSORS));
   
+  //wait for message from Coordinator
+  xbee.refresh();
+  while(!xbee.available()){
+    xbee.refresh();
+  }
+  xbee.meetCoordinator();
 }
 
 
 uint32_t start;
 
 void loop(){
-  
+  xbee.enable();
   clock.print();
   start = millis();
   for(int i=0;i<NUM_SAMPLES;i++) sensorhub.sample();  
-  sensorhub.log();
-  
+  sensorhub.log(true);
   
   Serial.print("sampling took: ");
   Serial.print(millis()-start);
   Serial.println("ms");
-  Serial.println("Data packet:" );
-  Serial.print("[");
-  for(int i=0; i<sensorhub.getDataSize();i++){
-    Serial.print(sensorhub.data[i]);
-    Serial.print(", ");
-  }
-  Serial.print("]");
   
-  Serial.println();
+  //send data packet until reception is acknowledged
+  while(!xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize()));
   
-  xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize());
-  
-  
-  clock.setAlarm1Delta(0, 15);
+  clock.setAlarm1Delta(5, 0);
   weatherPlug.sleep();
+  xbee.disable();
   sleep();
 }
 

@@ -4,7 +4,7 @@
 #include "XBee.h"
 #include "XBeePlus.h"
 
-#define DEBUG
+//#define DEBUG
 
 #define SET_BIT(p,n) ((p) |= (1 << (n)))
 #define CLR_BIT(p,n) ((p) &= (~(1) << (n)))
@@ -18,7 +18,7 @@ XBeePlus::XBeePlus()
 {
 	XBee _xbee = XBee();
 	ZBRxResponse rx = ZBRxResponse();
-	XBeeAddress64 addr64 = XBeeAddress64(0x12345678, 0xABCDEF12);
+	XBeeAddress64 addr64 = XBeeAddress64(0x0, 0xFFFF);
 	ZBTxStatusResponse txStatus = ZBTxStatusResponse();
 }
 
@@ -68,20 +68,19 @@ void XBeePlus::meetCoordinator()
         //XBeeAddress64 tmp = 
 	_xbee.getResponse().getZBRxResponse(rx);//.getRemoteAddress64();
         XBeeAddress64 tmp = rx.getRemoteAddress64();
-	Serial.print("COORDINATOR ADDRESS:" );
 	addr64.setMsb(tmp.getMsb());
         addr64.setLsb(tmp.getLsb());
 }
 
 uint8_t * XBeePlus::getData(){
 	_xbee.getResponse().getZBRxResponse(rx);
-	//#ifdef DEBUG
+	#ifdef DEBUG
 	for(int i=0; i< rx.getDataLength();i++){
 	  Serial.print(rx.getData(i),HEX);
           Serial.print(",");  
         }
 	Serial.println();
-	//#endif
+	#endif
 	uint8_t dataLength = rx.getDataLength();
 	data[0] = rx.getData(dataLength-2);
 	data[1] = rx.getData(dataLength-1);
@@ -92,6 +91,8 @@ uint8_t * XBeePlus::getData(){
 #define DATA_FRAME 0b0010
 
 bool XBeePlus::sendIDs(uint8_t * arrayPointer, uint8_t arrayLength){
+	addr64.setMsb(0x0);
+	addr64.setLsb(0xFFFF);
 	sendApiframe(arrayPointer, arrayLength, ID_FRAME);	
 }
 
@@ -106,6 +107,7 @@ bool XBeePlus::sendApiframe(uint8_t *arrayPointer, uint8_t arrayLength, uint8_t 
 		
                 arr[i+1]=arrayPointer[i];
         }
+
         return send(&arr[0], arrayLength+1,addr64.getMsb(), addr64.getLsb());
 }
 
@@ -113,15 +115,16 @@ bool XBeePlus::sendApiframe(uint8_t *arrayPointer, uint8_t arrayLength, uint8_t 
 bool XBeePlus::send(uint8_t * arrayPointer, uint8_t arrayLength, uint32_t addr64_MSB, uint32_t addr64_LSB){
 	addr64.setMsb(addr64_MSB);
 	addr64.setLsb(addr64_LSB);
+	
 	ZBTxRequest zbTx = ZBTxRequest(addr64, arrayPointer, arrayLength);
 	//zbTx.setOption(0xAAAA);	
-	Serial.print("Option: ");	
+	//Serial.print("Option: ");	
 	Serial.println(zbTx.getOption());
 	_xbee.send(zbTx);	
 
   	if (_xbee.readPacket(5000)){
 		uint8_t API_ID = _xbee.getResponse().getApiId();
-    		if (API_ID == 89) {
+    		if (API_ID == 89 || API_ID==139) {
       			_xbee.getResponse().getZBTxStatusResponse(txStatus);
 	        	// get the delivery status, the fifth byte
       			if (txStatus.getDeliveryStatus() == SUCCESS) {
