@@ -26,6 +26,7 @@ api.build.f_cpu=32000000L
 api.build.core=xmega
 api.build.variant=api
 
+api.upload.tool=avrdude
 api.upload.protocol=avr109
 api.upload.speed=115200
 api.upload.maximum_size=131072
