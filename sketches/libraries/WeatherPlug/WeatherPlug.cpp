@@ -23,7 +23,7 @@ void WeatherPlug::init(){
 	if (initialized) return; 
 	
 	clock.begin(DateTime(__DATE__, __TIME__));
-	Serial.println("initializing");
+	//Serial.println("initializing");
 
 		  
   	pinMode(5,OUTPUT);

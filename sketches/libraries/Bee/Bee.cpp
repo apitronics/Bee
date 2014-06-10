@@ -68,7 +68,6 @@ void _goToSleep(){
 }
 
 ISR(PORTF_INT0_vect){
-	Serial.print("!");
 	state=IDLE;
 }
 

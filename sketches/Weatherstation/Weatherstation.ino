@@ -26,34 +26,27 @@ void setup(){
   digitalWrite(5,HIGH);
   Serial.begin(57600);
   xbee.begin(9600);
-  delay(1000);
+  Serial.print("Initialized: serial");
   
   clock.begin(date);
   configureSleep();
-  
-  Serial.println("IDs:");
-  Serial.print("[");
-  for(int i=0; i<UUID_WIDTH*NUM_SENSORS;i++){
-    Serial.print(sensorhub.ids[i]);
-    Serial.print(", ");
-  }
-  
-  Serial.print("]");
-  Serial.println();
-  
-  Serial.println("starting");
+  Serial.print(", clock");
   
   sensorhub.init();
+  Serial.println(", sensors");
   
+  Serial.print("Connecting to Hive...");
   //send IDs packet until reception is acknowledged
   while(!xbee.sendIDs(&sensorhub.ids[0], UUID_WIDTH*NUM_SENSORS));
-  
+  Serial.print(" Hive received packet...");
   //wait for message from Coordinator
   xbee.refresh();
   while(!xbee.available()){
     xbee.refresh();
   }
   xbee.meetCoordinator();
+  Serial.println(" Hive address saved.");
+  Serial.println("Launching program.");
 }
 
 
