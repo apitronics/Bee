@@ -40,7 +40,7 @@ void getFlags();
 void getDate();
 void print();
 void setDate(DateTime);
-void setDate(String);
+void setDate(String date);
 void configureInterrupt();
 void sleep();
 byte second, minute, hour, dayOfWeek, dayOfMonth, month, year;

@@ -23,7 +23,7 @@ void WeatherPlug::init(){
 	if (initialized) return; 
 	
 	clock.begin(DateTime(__DATE__, __TIME__));
-	//Serial.println("initializing");
+	Serial.println("initializing");
 
 		  
   	pinMode(5,OUTPUT);
@@ -93,6 +93,44 @@ void WeatherPlug::sleep(){
 	isAwake=false;
 }
 
+//ADC Drivers
+uint16_t WeatherPlug::_getADC(uint16_t channel){
+
+//	digitalWrite(5,HIGH);
+//        enableI2C();
+  //      i2cChannel(1);
+
+        I2C_BEGIN_TRANSMIT(ADS7828);
+        I2C_WRITE((byte)0b01);
+        I2C_END_TRANSMIT();
+        delay(I2C_DELAY);
+
+        I2C_BEGIN_TRANSMIT(ADS7828);
+        I2C_WRITE((byte)0b01);
+	byte channelSel = 0b11000101 | (channel<<4);
+        I2C_WRITE((byte)channelSel);
+        I2C_WRITE((byte)0b10000011);
+        I2C_END_TRANSMIT();
+        delay(I2C_DELAY);
+
+        I2C_BEGIN_TRANSMIT(ADS7828);
+        I2C_WRITE((byte)0b01);
+        I2C_END_TRANSMIT();
+        delay(I2C_DELAY);
+
+
+        I2C_BEGIN_TRANSMIT(ADS7828);
+        I2C_WRITE((byte)0b00);
+        I2C_END_TRANSMIT();
+        delay(I2C_DELAY);
+
+        I2C_REQUEST(ADS7828,2);
+        delay(I2C_DELAY);
+	uint16_t data = I2C_READ()<<8;
+        data |=I2C_READ();
+	return data;
+}
+
 WeatherPlug weatherPlug;
 
 
@@ -108,39 +146,8 @@ float WeatherPlug::mapWindDirection(uint16_t val){
 };
 
 float WeatherPlug::getWindDirection(){
-	digitalWrite(5,HIGH);
-        enableI2C();
-	i2cChannel(1);
-
-	I2C_BEGIN_TRANSMIT(ADS7828);
-	I2C_WRITE((byte)0b01);
-	I2C_END_TRANSMIT();
-	delay(I2C_DELAY);
-	  
-	I2C_BEGIN_TRANSMIT(ADS7828);
-	I2C_WRITE((byte)0b01);
-	I2C_WRITE((byte)0b11110101);
-	I2C_WRITE((byte)0b10000011);
-	I2C_END_TRANSMIT();
-	delay(I2C_DELAY);
-	  
-	I2C_BEGIN_TRANSMIT(ADS7828);
-	I2C_WRITE((byte)0b01);
-	I2C_END_TRANSMIT();
-	delay(I2C_DELAY);
-	    
-	    
-	I2C_BEGIN_TRANSMIT(ADS7828);
-	I2C_WRITE((byte)0b00);
-	I2C_END_TRANSMIT();
-	delay(I2C_DELAY);
-	  
-	I2C_REQUEST(ADS7828,2);
-	delay(I2C_DELAY);
-	uint16_t data = I2C_READ()<<8;	
-	data |=I2C_READ();
+	uint16_t data = _getADC(3);
 	data >>=4;
-
 	return mapWindDirection(data); 
 };
 
@@ -336,8 +343,4 @@ void SHT2x_RH::getData(){
         data[1]=RH>>8;
         data[0]=RH;
 };
-
-
-
-
 

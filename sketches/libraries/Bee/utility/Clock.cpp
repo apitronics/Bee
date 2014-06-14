@@ -111,7 +111,8 @@ void Clock::_writeDateToEEPROM(){
 void Clock::setDate(String date)
 {
    getDate();
-   //Serial.println(date);
+   Serial.print("given date: ");
+   Serial.println(date);
    //day of week is user define
    String daysOfWeek[7] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sun", "Mon"};
    String monthsOfYear[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
@@ -137,15 +138,15 @@ void Clock::setDate(String date)
    //Serial.print("Day of month: ");
    //Serial.println(dayOfMonth);
 
-   //year = atoi(&date[13]);
+   year = atoi(&date[13]);
    //Serial.print("Year: ");
    //Serial.println(year);
 
-   //hour = atoi(&date[17]);
+   hour = atoi(&date[17]);
    //Serial.print("hour: ");
    //Serial.println(hour);
 
-   //minute = atoi(&date[20]);
+   minute = atoi(&date[20]);
    //Serial.print("minute: ");
    //Serial.println(minute);
 
@@ -196,32 +197,21 @@ String Clock::timestamp(){
 	if (second < 10)   output+="0";
 	output+=String(second);
 	output+=", ";
+
+	if (dayOfMonth < 10) output+="0";
 	output+=String(dayOfMonth);
 	output+="/";
+	if (month<10) output+="0";
 	output+=String(month);
 	output+="/";
+	if (year<10) output+="0";
 	output+=year;
 	return output;
 }
 
+
 void Clock::_print(){
-   if (hour < 10)
-   Serial.print("0");
-   Serial.print(hour, DEC);
-   Serial.print(":");
-   if (minute < 10)
-     Serial.print("0");
-   Serial.print(minute, DEC);
-   Serial.print(":");
-   if (second < 10)
-     Serial.print("0");
-   Serial.print(second, DEC);
-   Serial.print(", ");
-   Serial.print(dayOfMonth, DEC);
-   Serial.print("/");
-   Serial.print(month,DEC);
-   Serial.print("/");
-   Serial.println(year, DEC);
+   Serial.println(timestamp());
 }
 void Clock::enableAlarm1(){
   //first retrieve control byte

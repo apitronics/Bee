@@ -23,7 +23,8 @@ class WeatherPlug
 		void enableI2C();
 		void disableI2C();
 		bool initialized=false;
-		bool isAwake=false;	
+		bool isAwake=false;
+		uint16_t _getADC(uint16_t channel);	
 		//BMP085 temp & pressure
 		Adafruit_BMP085 bmp;
 

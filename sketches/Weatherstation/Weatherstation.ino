@@ -40,36 +40,41 @@ void setup(){
   while(!xbee.sendIDs(&sensorhub.ids[0], UUID_WIDTH*NUM_SENSORS));
   Serial.print(" Hive received packet...");
   //wait for message from Coordinator
+  
   xbee.refresh();
   while(!xbee.available()){
     xbee.refresh();
   }
   xbee.meetCoordinator();
+  
   Serial.println(" Hive address saved.");
   Serial.println("Launching program.");
 }
 
 
-uint32_t start;
+bool firstRun=true;
 
 void loop(){
-  xbee.enable();
+  //if A1 woke us up and its log time OR if its the first run OR if the button has been pushed
+  bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
   clock.print();
-  start = millis();
-  for(int i=0;i<NUM_SAMPLES;i++) sensorhub.sample();  
-  sensorhub.log(true);
+  if( clock.triggeredByA1() ||  buttonPressed || firstRun){
+    Serial.print("Sampling sensors");
+    sensorhub.sample(true);
+    clock.setAlarm1Delta(0,15);
+  }
   
-  Serial.print("sampling took: ");
-  Serial.print(millis()-start);
-  Serial.println("ms");
-  
-  //send data packet until reception is acknowledged
-  while(!xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize()));
-  
-  clock.setAlarm1Delta(5, 0);
+  if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
+    xbee.enable();
+    Serial.println("Creating datapoint from samples");
+    sensorhub.log(true); 
+    while(!xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize()));
+    clock.setAlarm2Delta(10);
+  }
+  firstRun=false;
   weatherPlug.sleep();
   xbee.disable();
-  sleep();
+  sleep();  
 }
 
 

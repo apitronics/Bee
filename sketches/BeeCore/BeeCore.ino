@@ -15,7 +15,7 @@ Sensorhub sensorhub(sensor,NUM_SENSORS);
 
 #define DEBUG
 
-void setup(){
+void setup(){  
   xbee.begin(9600);
   Serial.begin(57600);
   delay(1000);
