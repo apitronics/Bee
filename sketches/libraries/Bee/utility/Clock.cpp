@@ -273,7 +273,7 @@ void Clock::enableAlarm2(){
 void Clock::setAlarm1Delta(uint8_t minutesAsleep, uint8_t secondsAsleep){
   _semaphore= false;
   getDate();
-  
+
   while(!I2C_READY());
   //this puts the highest bit (bit 7) of seconds, minutes, hours, and day to HIGH
   I2C_BEGIN_TRANSMIT(DS1339_I2C_ADDRESS);

@@ -37,35 +37,44 @@ void setup(){
   Serial.println("starting");
   #endif
   
+  #ifdef XBEE_ENABLE
   xbee.sendIDs(&sensorhub.ids[0], UUID_WIDTH*NUM_SENSORS);
   xbee.refresh();
   while(!xbee.available()){
     xbee.refresh();
   }
   xbee.meetCoordinator();
+  #endif
 }
 
 
-long int start=0;
+bool firstRun=true;
 
 void loop(){
+  //if A1 woke us up and its log time OR if its the first run OR if the button has been pushed
+  bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
   clock.print();
-  start = millis();
-  for(int i=0;i<NUM_SAMPLES;i++) sensorhub.sample();
- 
- 
-  #ifdef DEBUG 
-  sensorhub.log();
-  #else
-  sensorhub.log(true);
-  #endif
   
-    
-  xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize());
+  if( clock.triggeredByA1() ||  buttonPressed || firstRun){
+    Serial.print("Sampling sensors");
+    sensorhub.sample(true);
+    clock.setAlarm1Delta(0,15);
+  }
   
-  clock.setAlarm1Delta(0, 15);
-  
-  sleep();
+  if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
+    #ifdef XBEE_ENABLE
+    xbee.enable();
+    #endif
+    Serial.println("Creating datapoint from samples");
+    sensorhub.log(true); 
+    #ifdef XBEE_ENABLE
+    while(!xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize()));
+    xbee.disable();
+    #endif
+    clock.setAlarm2Delta(1);
+  }
+  firstRun=false;
+  sleep(); 
   
 }
 

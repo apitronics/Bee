@@ -5,8 +5,8 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-String beeAddress = "\"a0\"";
-String APN = "M2M.T-Mobile.com";
+String beeAddress = "\"a1\"";
+String APN = "epc.tmobile.com";
 
 String SERVER= "acceso.apitronics.com";
 
@@ -69,7 +69,7 @@ class DSB1820B: public Sensor
 
 };
 
-#define NUM_SAMPLES 32
+#define NUM_SAMPLES 50
 DateTime date = DateTime(__DATE__, __TIME__);
 
 OnboardTemperature onboardTemp;
@@ -97,9 +97,11 @@ Sensorhub sensorhub(sensor,NUM_SENSORS);
 #define XBEE
 #define GSM_ENABLE
 
-#define SECS_BETWEEN_SAMPLES 15
-#define MINS_BETWEEN_LOGS 1
-#define MINS_BETWEEN_UPLOADS 3
+#define MINS_BETWEEN_SAMPLES 0
+#define SECS_BETWEEN_SAMPLES 30
+
+#define MINS_BETWEEN_LOGS 15
+#define MINS_BETWEEN_UPLOADS 180
 
 bool firstRun;
 String answer;
@@ -181,7 +183,7 @@ bool tryCommand(String command, String expected, uint8_t length, bool verbose=fa
       }  
       
       if(expected[i]!=answer[i])  {
-        Serial.println(answer);
+        //Serial.println(answer);
         Serial.flush();
         return false;
       }
@@ -263,7 +265,7 @@ void postHeader(String length, String path="/"){
 
 }
 
-void postFooter(){
+bool postFooter(){
         GSMout2("\r\n\r\n");
         GSMout2("\r\n");
         
@@ -271,9 +273,11 @@ void postFooter(){
         String tmp="";
         #ifdef GSM_ENABLE
         
+        uint8_t count=0;
         while(tmp==""){
           Serial.print(".");
           tmp = getData2(5000);
+          if(count==15) return false;
         }
         Serial.println(tmp);
         
@@ -281,7 +285,8 @@ void postFooter(){
         for (int i=105; i<102+25;i++) datetime+=tmp[i];
 
         clock.getDate();
-        if(atoi(&datetime[17])!=clock.hour || atoi(&datetime[20])!=clock.minute){
+        
+        if(( atoi(&datetime[17])!=clock.hour || atoi(&datetime[20])!=clock.minute) && datetime[19]==':' ){
           Serial.print("Current: ");
           Serial.print(clock.hour);
           Serial.print(":");
@@ -295,10 +300,16 @@ void postFooter(){
         GSMout("+++\r");
         Serial.println(getData2(1000));
         delay(3000);
+        return datetime[19]==':';
+        #else
+          return true;
         #endif
+        
+        
+        
 }
 
-void postData(){
+bool postData(){
         String post = "{\"address\":" + beeAddress + ",\"data\":{";
         //post+="}}";
         
@@ -330,8 +341,7 @@ void postData(){
         }
         
         GSMout2("}}");
-        postFooter();
-        sampleCount=0;
+        return postFooter();
 }
 
 void postIDs(){	
@@ -508,7 +518,7 @@ void sleepTelit(){
 
 
 void setup(){
-  //initBuffer();
+  initBuffer();
   //select GPSM module
   pinMode(9,OUTPUT);
   digitalWrite(9,LOW);
@@ -536,7 +546,9 @@ void setup(){
 
   clock.begin(date);
   clock.setDate(date);
+  
   configureSleep();
+  
   clock.enableAlarm1();
   clock.enableAlarm2();
   
@@ -548,7 +560,7 @@ void setup(){
   
   clock.enableAlarm1();
   clock.enableAlarm2();
-  clock.setAlarm1Delta(0,SECS_BETWEEN_SAMPLES);
+  clock.setAlarm1Delta(MINS_BETWEEN_SAMPLES, SECS_BETWEEN_SAMPLES);
   clock.setAlarm2Delta(MINS_BETWEEN_UPLOADS);
   
   //everything from here out will be data dumps
@@ -572,12 +584,14 @@ void setup(){
   configure();
   Serial.println("Done configuring");
   
-  
-  #endif
+  //post IDs to server
   if(GSM_init()){
     connectTo(SERVER,"125");
     postIDs();
   }
+  
+  #endif
+
 
 }
 
@@ -620,13 +634,15 @@ bool connectTo(String server, String port){
 }
 
 void loop(){
+  clock.getDate();
+  Serial.print(".");
   digitalWrite(5,HIGH);
   sensorhub.sample(false);  
   bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
 
 
   //if A1 woke us up and its log time OR if its the first run OR if the button has been pushed
-  if( ( clock.triggeredByA1() && (clock.minute%MINS_BETWEEN_LOGS==0) ) || firstRun ||  buttonPressed){
+  if( ( clock.triggeredByA1() && (clock.minute%MINS_BETWEEN_LOGS==0 && clock.second==0) ) || firstRun ||  buttonPressed){
     //timeStamps[sampleCount]=clock.timestamp();
     clock.timestamp().toCharArray(timeStamps[sampleCount],LEN_OF_TIMESTAMP);
     Serial.println(timeStamps[sampleCount]);
@@ -649,30 +665,41 @@ void loop(){
           Serial.println("Giving up on SGACT");
           digitalWrite(A1,LOW);
           //try again in 15 minutes
-         
-          clock.setAlarm2Delta(MINS_BETWEEN_UPLOADS);
-          delay(100);
+          clock.setAlarm2Delta(MINS_BETWEEN_LOGS);
+          clock.setAlarm1Delta(MINS_BETWEEN_SAMPLES,SECS_BETWEEN_SAMPLES);
           sleepTelit();
         }
         //otherwise we have a good SGACT connection!
         else  {
           if(connectTo(SERVER, "126")){
-            postData();
-            sleepTelit();
-            clock.setAlarm2Delta(MINS_BETWEEN_UPLOADS);
-            for(int i=0;i<10;i++){
-              digitalWrite(A1,HIGH);
-              delay(100);
-              digitalWrite(A1,LOW);
-              delay(100);
+            //if succesful 
+            if(postData()){
+              sampleCount=0;           //we can set sampleCount back to 0
+              for(int i=0;i<10;i++){   //do a light show to celebrate
+                digitalWrite(A1,HIGH);
+                delay(100);
+                digitalWrite(A1,LOW);
+                delay(100);
+              }
+              sleepTelit();
+              clock.setAlarm2Delta(MINS_BETWEEN_UPLOADS);
+              clock.setAlarm1Delta(MINS_BETWEEN_SAMPLES,SECS_BETWEEN_SAMPLES);
             }
+            else{  //if failed
+              digitalWrite(A1,LOW);
+              clock.setAlarm2Delta(MINS_BETWEEN_LOGS);  //we'll try again next time we log
+              clock.setAlarm1Delta(MINS_BETWEEN_SAMPLES,SECS_BETWEEN_SAMPLES);
+              sleepTelit();
+            }
+            
+            
           }
           else{
               Serial.println("failed AT#SD");
               Serial.println(answer);
               digitalWrite(A1,LOW);
-              clock.setAlarm2Delta(MINS_BETWEEN_UPLOADS);
-              delay(100);
+              clock.setAlarm2Delta(MINS_BETWEEN_LOGS);
+              clock.setAlarm1Delta(MINS_BETWEEN_SAMPLES,SECS_BETWEEN_SAMPLES);
               sleepTelit();
           }
         }
@@ -687,16 +714,13 @@ void loop(){
 
   digitalWrite(5,LOW);
   disableI2C();
-  Serial.println();
   #ifdef DEBUG
   delay(100);
   #endif
     
-  clock.setAlarm1Delta(0,SECS_BETWEEN_SAMPLES);
+  clock.setAlarm1Delta(MINS_BETWEEN_SAMPLES,SECS_BETWEEN_SAMPLES);
   digitalWrite(VREG_EN,LOW);
-  
   weatherPlug.sleep();
-  Serial.println("going to sleep");
   sleep();
   
   delay(500);
