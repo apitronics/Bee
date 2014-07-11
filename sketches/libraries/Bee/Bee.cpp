@@ -55,16 +55,11 @@ void _goToSleep(){
 		_goToSleep();
 	}
 	else{
-		return;
-		//return;
-		//setupBattSense();
-		//if(getBatt()<9.5){
-		//	state=PWR_DOWN;
-	//		_goToSleep();		
-	//	}
-	//	else	return;
-	}
-
+		setupBattSense();
+		if(getBatt()<9.5){
+			_goToSleep();		
+		}
+	else	return;
 }
 
 ISR(PORTF_INT0_vect){
