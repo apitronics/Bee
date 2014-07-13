@@ -14,7 +14,9 @@ First you need to download the arduino-1.0.1-rx2-xmegaduino-beta4b. What's impor
 
 ##Add in our libraries
 
-(1) Edit the boards.txt file in ```~/arduino-1.0.1-rx2-xmegaduino-beta4b/hardware/xmegaduino/```. Add the following at the top, bottom, middle, or anywhere really. For Mac, once Arduino is moved into Applications, boards.txt will be in ```/Applications/Arduino.app/Contents/Resources/Java/hardware/xmegaduino/```.
+(1) 
+In Mac/Linux:
+Edit the boards.txt file in ```~/arduino-1.0.1-rx2-xmegaduino-beta4b/hardware/xmegaduino/```. Add the following at the top, bottom, middle, or anywhere really. For Mac, once Arduino is moved into Applications, boards.txt will be in ```/Applications/Arduino.app/Contents/Resources/Java/hardware/xmegaduino/```.
 
 ```
 ##############################################################
@@ -33,11 +35,18 @@ api.upload.maximum_size=131072
 
 ##############################################################
 ```
+In Windows:
+Skip this step
 
 (2) In variants, create a soft link to the api directory in this repository.
 
+In Mac/Linux:
+
 ```ln -s ~/Bee/api ~/arduino-1.0.1-rx2-xmegaduino-beta4b/hardware/xmegaduino/variants/api```
 Note that we assumed that this repository and the Xmegaduino are both in your home directory. You might need to fix these paths.
+
+In Windows:
+Skip this step
 
 (3) Open up the Xmegaduino IDE and go to: `File-->Preferences` and make the sketchbook location the `sketches` directory in this repository. Restart the IDE and all the libraries will be loaded.
 
