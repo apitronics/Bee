@@ -5,7 +5,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-String beeAddress = "\"a1\"";
+String beeAddress = "\"a2\"";
 String APN = "epc.tmobile.com";
 
 String SERVER= "acceso.apitronics.com";
@@ -27,7 +27,7 @@ class EC5_SoilHumidity: public Sensor
         String getUnits() {return "mV"; }
         void init() {weatherPlug.init();}
         void getData() { 
-          uint16_t sample = weatherPlug._getADC(_channel)*1.0071108127079073;
+          uint16_t sample = weatherPlug._getADC(_channel)/2.0*1.0071108127079073;
           data[1] = sample >> 8;
           data[0] = sample;
         }
@@ -585,10 +585,10 @@ void setup(){
   Serial.println("Done configuring");
   
   //post IDs to server
-  if(GSM_init()){
-    connectTo(SERVER,"125");
-    postIDs();
-  }
+  //if(GSM_init()){
+  //  connectTo(SERVER,"125");
+  //  postIDs();
+  //}
   
   #endif
 
@@ -600,6 +600,7 @@ unsigned long awake=0;
 bool GSM_init(){
   getTelitReady();
   uint32_t GSM_attempts = 0;
+  Serial.print("Attempting SGACT");
         while(!trySGACT()){
           
           //LED FEEDBACK
@@ -607,17 +608,19 @@ bool GSM_init(){
           if(GSM_attempts%2==0)  digitalWrite(A1,HIGH); 
           else                   digitalWrite(A1,LOW); 
           
-          Serial.print("failed AT#SGACT: ");
-          Serial.println(GSM_attempts++);
-          Serial.println(answer);
+          Serial.print(".");
+          GSM_attempts++;
+
           GSMout("AT#SGACT=1,0\r");
-          Serial.println(getData(2500));
+          getData(2500);
           GSMout("\r");
-          Serial.println(getData(500));
+          getData(500);
           if(GSM_attempts>45){
+            Serial.println();
             return false;
           }
-        }  
+        }
+  Serial.println();
   return true;
 }
 
@@ -632,7 +635,7 @@ bool connectTo(String server, String port){
   }
   return false;
 }
-
+uint8_t lastLogMin = 61;
 void loop(){
   clock.getDate();
   Serial.print(".");
@@ -642,15 +645,16 @@ void loop(){
 
 
   //if A1 woke us up and its log time OR if its the first run OR if the button has been pushed
-  if( ( clock.triggeredByA1() && (clock.minute%MINS_BETWEEN_LOGS==0 && clock.second==0) ) || firstRun ||  buttonPressed){
-    //timeStamps[sampleCount]=clock.timestamp();
+  if( ( clock.triggeredByA1() && (clock.minute%MINS_BETWEEN_LOGS==0 && lastLogMin!=clock.minute) ) || firstRun ||  buttonPressed){
     clock.timestamp().toCharArray(timeStamps[sampleCount],LEN_OF_TIMESTAMP);
+    Serial.println();
     Serial.println(timeStamps[sampleCount]);
     sensorhub.log(true);
     for(int i=0;i<sensorhub.getDataSize();i++){
       data_buffer[sampleCount][i]=sensorhub.data[i];
     }
     sampleCount++;
+    lastLogMin=clock.minute;
   }
   
   bool enoughPower= true;

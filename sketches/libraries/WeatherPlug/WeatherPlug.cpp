@@ -1,7 +1,8 @@
-#include <Sensorhub.h>
-#include <Wire.h>
-#include <WeatherPlug.h>
-#include <Bee.h>
+#include "Sensorhub.h"
+#include "Clock.h"
+#include "Wire.h"
+#include "WeatherPlug.h"
+#include "Bee.h"
 
 #define I2C_BEGIN xmWireC.begin
 #define I2C_BEGIN_TRANSMIT xmWireC.beginTransmission

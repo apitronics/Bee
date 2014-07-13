@@ -1,38 +1,13 @@
-#include <Sensorhub.h>
+#include <Clock.h>
+#include <Onboard.h>
+#include <XBeePlus.h>
 #include <Wire.h>  //we'll be depending on the core's Wire library
+#include <Sensorhub.h>
 #include <Bee.h>
+#include <WeatherPlug.h>
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <WeatherPlug.h>
-/*
-#define DSB1820B_UUID 0x0018
-#define DSB1820B_LENGTH_OF_DATA 2
-#define DSB1820B_SCALE 100
-#define DSB1820B_SHIFT 0
-
-//Create Sensorhub Sensor from DallasTemp library
-class DSB1820B: public Sensor
-{
-        public:
-                OneWire oneWire;
-                DallasTemperature dsb = DallasTemperature(&oneWire);
-                
-                DSB1820B(uint8_t samplePeriod=1):Sensor(DSB1820B_UUID, DSB1820B_LENGTH_OF_DATA, DSB1820B_SCALE, DSB1820B_SHIFT, false, samplePeriod){};
-                String getName(){ return "Temperature Probe"; }
-                String getUnits(){ return "C"; }
-                void init(){   
-                  dsb.begin();
-                }
-                void getData(){
-                  sensors.requestTemperatures();
-                  float sample = dsb.getTempCByIndex(0);
-                  uint16_t tmp = (sample + DSB1820B_SHIFT) * DSB1820B_SCALE;
-                  data[1]=tmp>>8;
-                  data[0]=tmp;
-                }
-
-};*/
 
 #define DSB1820B_UUID 0x0018
 #define DSB1820B_LENGTH_OF_DATA 2

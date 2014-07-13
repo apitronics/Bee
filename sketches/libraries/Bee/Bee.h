@@ -5,17 +5,6 @@
 #include "Sensorhub.h"
 #include "avr/sleep.h"
 
-#include "utility/XBeePlus.h"
-#include "utility/Clock.h"
-#include "utility/RTClib.h"
-#include "utility/Onboard.h"
-
-
-class AlphaBee{
-	public:
-	private:
-};
-
 void configureSleep();	
 void sleep();
 void _goToSleep();

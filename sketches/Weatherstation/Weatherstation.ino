@@ -1,7 +1,9 @@
-#include <Sensorhub.h>
+#include <Clock.h>
+#include <Onboard.h>
+#include <XBeePlus.h>
 #include <Wire.h>  //we'll be depending on the core's Wire library
+#include <Sensorhub.h>
 #include <Bee.h>
-
 #include <WeatherPlug.h>
 #define NUM_SAMPLES 32
 DateTime date = DateTime(__DATE__, __TIME__);

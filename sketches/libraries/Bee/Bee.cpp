@@ -1,13 +1,11 @@
 #include "Wire.h"
 #include "avr/sleep.h"
 
-#include "utility/XBeePlus.h"
-#include "utility/Clock.h"
-#include "utility/RTClib.h"
-#include "utility/Onboard.h"
-
+#include "XBeePlus.h"
+#include "Clock.h"
+#include "RTClib.h"
+#include "Onboard.h"
 #include "Bee.h"
-
 
 enum
 {

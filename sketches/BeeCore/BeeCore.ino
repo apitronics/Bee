@@ -1,8 +1,12 @@
-#include <Sensorhub.h>
-#include <Wire.h>  //we'll be depending on the core's Wire library
-#include <Bee.h>
 
+#include <Clock.h>
+#include <Onboard.h>
+#include <XBeePlus.h>
+#include <Wire.h>  //we'll be depending on the core's Wire library
+#include <Sensorhub.h>
+#include <Bee.h>
 #include <WeatherPlug.h>
+
 #define NUM_SAMPLES 32
 DateTime date = DateTime(__DATE__, __TIME__);
 
@@ -14,6 +18,7 @@ Sensor * sensor[] = {&onboardTemp, &batteryGauge};
 Sensorhub sensorhub(sensor,NUM_SENSORS);
 
 #define DEBUG
+#define XBEE_ENABLE
 
 void setup(){  
   xbee.begin(9600);
@@ -71,7 +76,7 @@ void loop(){
     while(!xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize()));
     xbee.disable();
     #endif
-    clock.setAlarm2Delta(1);
+    clock.setAlarm2Delta(15);
   }
   firstRun=false;
   sleep(); 

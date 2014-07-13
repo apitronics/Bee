@@ -522,4 +522,3 @@ void Clock::_clearStatusRegister(){
 }
 
 Clock clock;
-
