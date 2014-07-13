@@ -277,7 +277,7 @@ bool postFooter(){
         while(tmp==""){
           Serial.print(".");
           tmp = getData2(5000);
-          if(count==15) return false;
+          if(count++==15) return false;
         }
         Serial.println(tmp);
         

@@ -54,15 +54,7 @@ void _goToSleep(){
 	}
 	else{
 		return;
-		//return;
-		//setupBattSense();
-		//if(getBatt()<9.5){
-		//	state=PWR_DOWN;
-	//		_goToSleep();		
-	//	}
-	//	else	return;
 	}
-
 }
 
 ISR(PORTF_INT0_vect){
