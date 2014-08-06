@@ -62,10 +62,12 @@ void loop(){
   //if A1 woke us up and its log time OR if its the first run OR if the button has been pushed
   bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
   clock.print();
+  Serial.print("Button pressed: ");
+  Serial.println(buttonPressed);
   
   //this if statement just samples
   if( clock.triggeredByA1() ||  buttonPressed || firstRun){
-    Serial.print("Sampling sensors");
+    Serial.println("Sampling sensors");
     sensorhub.sample(true);
     clock.setAlarm1Delta(0,15);
   }

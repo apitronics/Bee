@@ -57,8 +57,8 @@ void sleep(){
 		_goToSleep();
 
 		sleep_disable();
+		clock.clearFlags();
 	}
-	clock.clearFlags();
 }
 
 void _goToSleep(){
