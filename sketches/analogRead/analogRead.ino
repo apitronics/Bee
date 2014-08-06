@@ -4,18 +4,48 @@
 #include <Wire.h> 
 #include <Sensorhub.h>
 #include <Bee.h>
-#include <WeatherPlug.h>
 
-#include <WeatherPlug.h>
 #define NUM_SAMPLES 32
 DateTime date = DateTime(__DATE__, __TIME__);
 
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+#define DSB1820B_UUID 0x0018
+#define DSB1820B_LENGTH_OF_DATA 2
+#define DSB1820B_SCALE 100
+#define DSB1820B_SHIFT 50
+
+//Create Sensorhub Sensor from DallasTemp library
+class DSB1820B: public Sensor
+{
+        public:
+                OneWire oneWire;
+                DallasTemperature dsb = DallasTemperature(&oneWire);
+                
+                DSB1820B(uint8_t samplePeriod=1):Sensor(DSB1820B_UUID, DSB1820B_LENGTH_OF_DATA, DSB1820B_SCALE, DSB1820B_SHIFT, true, samplePeriod){};
+                String getName(){ return "Temperature Probe"; }
+                String getUnits(){ return "C"; }
+                void init(){
+                   dsb.begin();
+                   
+                }
+                
+                void getData(){
+                  dsb.requestTemperatures();
+                  float sample = dsb.getTempCByIndex(0);
+                  uint16_t tmp = (sample + DSB1820B_SHIFT) * DSB1820B_SCALE;
+                  data[1]=tmp>>8;
+                  data[0]=tmp;
+      
+                }
+
+};
 
 #define ANALOG_UUID 0x0003
 #define ANALOG_LENGTH_OF_DATA 2
 #define ANALOG_SCALE 100
 #define ANALOG_SHIFT 0
-
 
 //Create Sensorhub Sensor from DallasTemp library
 class Analog: public Sensor
@@ -38,10 +68,18 @@ class Analog: public Sensor
    
                 }
                 void getData(){
-                    PORTA.DIRCLR |= 0b10;      //this needs to be slicker with port
+                    if(_port==0){
+                      PORTA.DIRCLR |= 0b10;      //this needs to be slicker with port
+                    }
+                    else
+                      PORTA.DIRCLR |= 0b100;
+                  
+           
+                    
                     int sample = 0;
                     for(int i=0; i<16; i++){
-                      sample+=analogRead12(A0);
+                      if(_port==0) sample+=analogRead12(A0);
+                      else sample+=analogRead12(A1);
                     }
                     sample>>=4;
           
@@ -70,13 +108,15 @@ class Analog: public Sensor
 OnboardTemperature onboardTemp;
 BatteryGauge batteryGauge;
 Analog analog(0);
+Analog analog2(1);
+DSB1820B dsb;
 
-#define NUM_SENSORS 3
-Sensor * sensor[] = {&onboardTemp, &batteryGauge, &analog};
+#define NUM_SENSORS 5
+Sensor * sensor[] = {&onboardTemp, &batteryGauge, &analog, &analog2, &dsb};
 Sensorhub sensorhub(sensor,NUM_SENSORS);
 
 #define DEBUG
-//#define XBEE_ENABLE
+#define XBEE_ENABLE
 
 void setup(){  
   xbee.begin(9600);
@@ -121,7 +161,7 @@ void loop(){
   if( clock.triggeredByA1() ||  buttonPressed || firstRun){
     Serial.print("Sampling sensors");
     sensorhub.sample(true);
-    clock.setAlarm1Delta(0,15);
+    clock.setAlarm1Delta(0,10);
   }
   
   if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
@@ -134,7 +174,7 @@ void loop(){
     while(!xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize()));
     xbee.disable();
     #endif
-    clock.setAlarm2Delta(15);
+    clock.setAlarm2Delta(10);
   }
   firstRun=false;
   sleep(); 

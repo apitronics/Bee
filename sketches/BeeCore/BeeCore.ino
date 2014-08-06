@@ -43,11 +43,14 @@ void setup(){
   #endif
   
   #ifdef XBEE_ENABLE
-  xbee.sendIDs(&sensorhub.ids[0], UUID_WIDTH*NUM_SENSORS);
+  //This is where the Bee associates itself with the Hive
+  while(!xbee.sendIDs(&sensorhub.ids[0], UUID_WIDTH*NUM_SENSORS));
   xbee.refresh();
+  //Now we wait for the Hive to respond
   while(!xbee.available()){
     xbee.refresh();
   }
+  //Once the Hive has responded, we will know the address of the Coordinator module
   xbee.meetCoordinator();
   #endif
 }
@@ -60,12 +63,14 @@ void loop(){
   bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
   clock.print();
   
+  //this if statement just samples
   if( clock.triggeredByA1() ||  buttonPressed || firstRun){
     Serial.print("Sampling sensors");
     sensorhub.sample(true);
     clock.setAlarm1Delta(0,15);
   }
   
+  //this if statement will average out the aggregated samples and send them to the Hive
   if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
     #ifdef XBEE_ENABLE
     xbee.enable();
@@ -78,9 +83,9 @@ void loop(){
     #endif
     clock.setAlarm2Delta(15);
   }
+  
   firstRun=false;
   sleep(); 
-  
 }
 
 

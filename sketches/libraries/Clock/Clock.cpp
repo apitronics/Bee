@@ -512,6 +512,10 @@ void Clock::getFlags(){
 	I2C_END_TRANSMIT();	
 }
 
+void Clock::clearFlags(){
+	_flags=0;
+}
+
 void Clock::_clearStatusRegister(){
 	while(!I2C_READY());
 	//clear flag before leaving

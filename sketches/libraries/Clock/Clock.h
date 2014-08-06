@@ -37,6 +37,7 @@ boolean alarmFlag();
 boolean triggeredByA1();
 boolean triggeredByA2();
 void getFlags();
+void clearFlags();
 void getDate();
 void print();
 void setDate(DateTime);

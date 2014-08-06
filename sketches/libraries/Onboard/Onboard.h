@@ -72,38 +72,42 @@ class Onboard
 		};
 
 		float getTemp(){
-		PORTA.DIR = 0;                                   // configure PORTA as input
-		ADCA.CTRLA |= 0x1;                               // enable adc
-		ADCA.CTRLB = ADC_RESOLUTION_12BIT_gc;            // 12 bit conversion
-		ADCA.REFCTRL = ADC_REFSEL0_bm;                   //sets reference to VCC/2.0=3.3/2.0=1.65   
-		// Set ADC clock to 125kHz:  CPU_per/64    =>    8MHz/64 = 125kHz
-		ADCA.PRESCALER = ADC_PRESCALER2_bm;
-		ADCA.CH0.CTRL = ADC_CH_INPUTMODE_SINGLEENDED_gc; // single ended
-		ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN7_gc;        // PORTA:7
-		int sample = 0;
-	  	for(int i=0; i<8; i++){
-	    		ADCA.CH0.CTRL |= ADC_CH_START_bm;
-	    		while(!ADCA.CH0.INTFLAGS);
-	    		sample+=ADCA.CH0.RES;
-	  	}
-	  	sample>>=3;
-	  	float resultADC = (sample/4.056)*1.65; //convert to mV
-	  	#ifdef DEBUG
-	  	Serial.print("raw: ");
-	  	Serial.print(resultADC);
-	  	Serial.println("mV");
-	  	#endif
+			//PORTA.DIR = 0;                                   // configure PORTA as input
+			ADCA.CTRLA |= 0x1;                               // enable adc
+			ADCA.CTRLB = ADC_RESOLUTION_12BIT_gc;            // 12 bit conversion
+			ADCA.REFCTRL = ADC_REFSEL0_bm;                   //sets reference to VCC/2.0=3.3/2.0=1.65   
+			// Set ADC clock to 125kHz:  CPU_per/64    =>    8MHz/64 = 125kHz
+			ADCA.PRESCALER = ADC_PRESCALER2_bm;
+			ADCA.CH0.CTRL = ADC_CH_INPUTMODE_SINGLEENDED_gc; // single ended
+			ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN7_gc;        // PORTA:7
+			int sample = 0;
 
-	  	#define TEMPERATURE_COEFF 19.5
-	  	#define V_0C 400
-	  	resultADC = (resultADC-V_0C)/TEMPERATURE_COEFF;
-	  	#ifdef DEBUG
-	  	Serial.print("BOARD: ");
-	  	Serial.print(resultADC);
-	  	Serial.println("*C");
-	  	Serial.println();
-	  	#endif
-	  	return resultADC;
+			delay(100);
+	  		for(int i=0; i<8; i++){
+				
+	    			ADCA.CH0.CTRL |= ADC_CH_START_bm;
+	    			while(!ADCA.CH0.INTFLAGS);
+	    			delay(5);
+				sample+=ADCA.CH0.RES;
+	  		}
+	  		sample>>=3;
+	  		float resultADC = (sample/4.056)*1.65; //convert to mV
+			#ifdef DEBUG
+			Serial.print("raw: ");
+			Serial.print(resultADC);
+			Serial.println("mV");
+			#endif
+
+			#define TEMPERATURE_COEFF 19.5
+			#define V_0C 400
+			resultADC = (resultADC-V_0C)/TEMPERATURE_COEFF;
+			#ifdef DEBUG
+			Serial.print("BOARD: ");
+			Serial.print(resultADC);
+			Serial.println("*C");
+			Serial.println();
+			#endif
+			return resultADC;
 		}
 };
 
