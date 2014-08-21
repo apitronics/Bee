@@ -53,7 +53,7 @@ class Onboard
 
 			int sample = 0;
 			for(int i=0; i<8; i++){
-			ADCB.CH0.CTRL |= ADC_CH_START_bm;;
+				ADCB.CH0.CTRL |= ADC_CH_START_bm;
 			while(!ADCB.CH0.INTFLAGS);
 				sample+=ADCB.CH0.RES;
 			}
@@ -82,7 +82,7 @@ class Onboard
 			ADCA.CH0.MUXCTRL = ADC_CH_MUXPOS_PIN7_gc;        // PORTA:7
 			int sample = 0;
 
-			delay(100);
+			//delay(100);
 	  		for(int i=0; i<8; i++){
 				
 	    			ADCA.CH0.CTRL |= ADC_CH_START_bm;

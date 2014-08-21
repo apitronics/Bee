@@ -64,7 +64,7 @@ void Clock::begin(DateTime date)
 	PORTF.DIRCLR = 0x4;	//configure PF2 as input
 	PORTF_PIN2CTRL = (0b011<<3)|0b010; //use internal pull-up and sense any edge
 
-	PORTF.DIRCLR = 0b1000000;	//configure PF6 as input
+	PORTF.DIRCLR = 0b01000000;	//configure PF6 as input
 	PORTF_PIN6CTRL = (0b011<<3)|0b010; //use internal pull-up and sense any edge
 }
 
