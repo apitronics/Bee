@@ -93,11 +93,11 @@ uint8_t * XBeePlus::getData(){
 bool XBeePlus::sendIDs(uint8_t * arrayPointer, uint8_t arrayLength){
 	addr64.setMsb(0x0);
 	addr64.setLsb(0xFFFF);
-	sendApiframe(arrayPointer, arrayLength, ID_FRAME);	
+	return sendApiframe(arrayPointer, arrayLength, ID_FRAME);	
 }
 
 bool XBeePlus::sendData(uint8_t * arrayPointer, uint8_t arrayLength){
-	sendApiframe(arrayPointer, arrayLength, DATA_FRAME);
+	return sendApiframe(arrayPointer, arrayLength, DATA_FRAME);
 }
 
 bool XBeePlus::sendApiframe(uint8_t *arrayPointer, uint8_t arrayLength, uint8_t frame){
@@ -153,14 +153,14 @@ bool XBeePlus::send(uint8_t * arrayPointer, uint8_t arrayLength, uint32_t addr64
   	} else if (_xbee.getResponse().isError()) {
 		#ifdef DEBUG
 		Serial.print("Error reading packet.  Error code: ");  
+		#endif
 		Serial.println(_xbee.getResponse().getErrorCode());
 		return false;
-		#endif
   	} else { // time elapsed with no answer
-    		#ifdef DEBUG
+    	#ifdef DEBUG
 		Serial.println("untimely response");
-		return false;
 		#endif
+		return false;
   	}	
 }
 

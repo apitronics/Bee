@@ -1,3 +1,6 @@
+//Apitronics - DS1820B.ino
+//Aug 25
+
 #include <Clock.h>
 #include <Onboard.h>
 #include <XBeePlus.h>
@@ -7,7 +10,6 @@
 
 #define XBEE_ENABLE
 
-
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -15,6 +17,10 @@
 #define DSB1820B_LENGTH_OF_DATA 2
 #define DSB1820B_SCALE 100
 #define DSB1820B_SHIFT 50
+
+const byte minA1 = 0;
+const byte secA1 = 15;
+const byte minA2 = 1;
 
 //Create Sensorhub Sensor from DallasTemp library
 class DSB1820B: public Sensor
@@ -75,7 +81,7 @@ void setup(){
   Serial.print("Connecting to Hive...");
   //send IDs packet until reception is acknowledged'
   
-  while(sendPacket(&sensorhub.ids[0],UUID_WIDTH*NUM_SENSORS));  
+  while(!sendPacket(&sensorhub.ids[0],UUID_WIDTH*NUM_SENSORS));  
   
   Serial.print(" Hive received packet...");
   //wait for message from Coordinator
@@ -96,11 +102,12 @@ void setup(){
 bool sendPacket(uint8_t * pointer, uint8_t length){
 
     for(int i=0; i<3;i++){
-      if( xbee.sendIDs(pointer, length) ) return true;
+      if( xbee.sendIDs(pointer, length) ) {
+        return true;
+      }
     }
     clock.setAlarm2Delta(5);
     sleep();
-    
     return false;
 }
 
@@ -112,9 +119,9 @@ void loop(){
   bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
   clock.print();
   if( clock.triggeredByA1() ||  buttonPressed || firstRun){
-    Serial.print("Sampling sensors");
+    Serial.println("Sampling sensors:");
     sensorhub.sample(true);
-    clock.setAlarm1Delta(0,15);
+    clock.setAlarm1Delta(minA1, secA1);
   }
   
   if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
@@ -124,7 +131,7 @@ void loop(){
     #ifdef XBEE_ENABLE
     while(!xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize()));
     #endif
-    clock.setAlarm2Delta(10);
+    clock.setAlarm2Delta(minA2);
   }
   firstRun=false;
  
