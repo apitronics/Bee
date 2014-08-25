@@ -38,7 +38,7 @@ void Clock::begin(DateTime date)
      	while(!I2C_READY());
 
      	// OSF flag will tell us if clock has been stopped
-	//byte ctl = I2C_READ();
+	//uint8_t ctl = I2C_READ();
 	//Serial.println(ctl,BIN);
 	//Serial.println(ctl>>OSCILLATOR_STOP_FLAG);
 	
@@ -48,9 +48,9 @@ void Clock::begin(DateTime date)
        		setDate(date);
      	}
 
-	byte control = 0b0010000;
+	uint8_t control = 0b0010000;
 	while(!I2C_READY());
-  	//write new control byte back
+  	//write new control uint8_t back
   	I2C_BEGIN_TRANSMIT(DS1339_I2C_ADDRESS);
   	I2C_WRITE(CONTROL_REG);
   	I2C_WRITE(control);
@@ -79,7 +79,7 @@ void Clock::I2Cdisable(){
 void Clock::setDate(DateTime date)
 {
    //If I could force recompile of this library, I could avoid passing this explicity
-   second = date.ss; // Use of (byte) type casting and ascii math to achieve result.
+   second = date.ss; // Use of (uint8_t) type casting and ascii math to achieve result.
    minute = date.mm;
    hour = date.hh;
    dayOfWeek = 0;
@@ -214,7 +214,7 @@ void Clock::_print(){
    Serial.println(timestamp());
 }
 void Clock::enableAlarm1(){
-  //first retrieve control byte
+  //first retrieve control uint8_t
   I2C_BEGIN_TRANSMIT(DS1339_I2C_ADDRESS);
   I2C_WRITE(0xE);
   I2C_END_TRANSMIT();
@@ -228,11 +228,11 @@ void Clock::enableAlarm1(){
 
   control = I2C_READ();
   control = control|0b0000101; //enables A1IE and INTCN, alarm 1 and interrupt pin toggle respectively
-  //OR it with current control byte to not clear other bits
+  //OR it with current control uint8_t to not clear other bits
 
   
   while(!I2C_READY());
-  //write new control byte back
+  //write new control uint8_t back
   I2C_BEGIN_TRANSMIT(DS1339_I2C_ADDRESS);
   I2C_WRITE(CONTROL_REG);
   I2C_WRITE(control);
@@ -241,7 +241,7 @@ void Clock::enableAlarm1(){
 }
 
 void Clock::enableAlarm2(){
-  //first retrieve control byte
+  //first retrieve control uint8_t
   I2C_BEGIN_TRANSMIT(DS1339_I2C_ADDRESS);
   I2C_WRITE(0xE);
   I2C_END_TRANSMIT();
@@ -256,11 +256,11 @@ void Clock::enableAlarm2(){
 	
   control = I2C_READ();
   control = control|0b0000110; //enables A2IE and INTCN, alarm 2 and interrupt pin toggle respectively
-  //control = 0b110; //OR it with current control byte to not clear other bits
+  //control = 0b110; //OR it with current control uint8_t to not clear other bits
 
   
   while(!I2C_READY());
-  //write new control byte back
+  //write new control uint8_t back
   I2C_BEGIN_TRANSMIT(DS1339_I2C_ADDRESS);
   I2C_WRITE(CONTROL_REG);
   I2C_WRITE(control);
@@ -465,18 +465,18 @@ void Clock::setAlarm2Delta(uint8_t minutesAsleep){
 
 
 // Convert normal decimal numbers to binary coded decimal
-byte Clock::decToBcd(byte val)
+uint8_t Clock::decToBcd(uint8_t val)
 {
 	return ( (val/10*16) + (val%10) );
 }
  
 // Convert binary coded decimal to normal decimal numbers
-byte Clock::bcdToDec(byte val)
+uint8_t Clock::bcdToDec(uint8_t val)
 {
 	return ( (val/16*10) + (val%16) );
 }
 
-boolean Clock::alarmFlag(){
+bool Clock::alarmFlag(){
 	I2C_BEGIN_TRANSMIT(DS1339_I2C_ADDRESS);
 	I2C_WRITE(STATUS_REG);
 	I2C_END_TRANSMIT();
@@ -490,11 +490,11 @@ boolean Clock::alarmFlag(){
 	
 }
 
-boolean Clock::triggeredByA1(){
+bool Clock::triggeredByA1(){
 	return _flags&0b1;
 }
 
-boolean Clock::triggeredByA2(){
+bool Clock::triggeredByA2(){
 	return _flags&0b10;
 }
 
