@@ -21,7 +21,7 @@
 //counts number of Transmission Errors (TR)
 #define TR_UUID 0x0003
 #define RR_max 10    //maximum number of retries Xbee attempts before reporting error - this is the scalar
-const int maxRetries = 3;  //how many times we attempt to send packets
+const int maxRetries = 5;  //how many times we attempt to send packets
 
 const byte minA1 = 1;
 const byte secA1 = 0;
@@ -167,7 +167,7 @@ void loop(){
   firstRun=false;
  
   #ifdef XBEE_ENABLE
-  xbee.disable();
+  //xbee.disable();
   #endif
   sleep();  
 }
@@ -179,8 +179,8 @@ boolean sendIDPacket(uint8_t * pointer, uint8_t length){
         return true;
       }
     }
-    clock.setAlarm2Delta(5);
-    sleep();
+    clock.setAlarm2Delta(minA2);
+    //sleep();
     return false;
 }
 

@@ -1,3 +1,6 @@
+//Apitronics - Weatherstation.ino
+//Aug 27, 2014
+
 #include <Clock.h>
 #include <Onboard.h>
 #include <XBeePlus.h>
@@ -6,6 +9,7 @@
 #include <Bee.h>
 #include <WeatherPlug.h>
 #define NUM_SAMPLES 32
+#define XBEE_ENABLE
 DateTime date = DateTime(__DATE__, __TIME__);
 
 OnboardTemperature onboardTemp;
@@ -21,6 +25,12 @@ SHT2x_RH sht_rh;
 #define NUM_SENSORS 9
 Sensor * sensor[] = {&onboardTemp, &batteryGauge, &BMP_temp,&BMP_press, &windDir, &windSpeed, &rainfall, &sht_temp, &sht_rh};
 Sensorhub sensorhub(sensor,NUM_SENSORS);
+
+const int maxRetries = 5;  //how many times we attempt to send packets
+
+const byte minA1 = 0;
+const byte secA1 = 30;
+const byte minA2 = 15;
 
 void setup(){
   delay(1000);
@@ -39,7 +49,7 @@ void setup(){
   
   Serial.print("Connecting to Hive...");
   //send IDs packet until reception is acknowledged
-  while(!xbee.sendIDs(&sensorhub.ids[0], UUID_WIDTH*NUM_SENSORS));
+  while(!sendIDPacket(&sensorhub.ids[0],UUID_WIDTH*NUM_SENSORS)); 
   Serial.print(" Hive received packet...");
   //wait for message from Coordinator
   
@@ -61,17 +71,18 @@ void loop(){
   bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
   clock.print();
   if( clock.triggeredByA1() ||  buttonPressed || firstRun){
-    Serial.print("Sampling sensors");
+    Serial.println("Sampling sensors:");
     sensorhub.sample(true);
-    clock.setAlarm1Delta(0,15);
+    clock.setAlarm1Delta(minA1, secA1);
   }
-  
   if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
     xbee.enable();
     Serial.println("Creating datapoint from samples");
-    sensorhub.log(true); 
-    while(!xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize()));
-    clock.setAlarm2Delta(10);
+    sensorhub.log(true);
+    #ifdef XBEE_ENABLE
+    sendDataPacket(&sensorhub.data[0], sensorhub.getDataSize());
+    #endif
+    clock.setAlarm2Delta(minA2);
   }
   firstRun=false;
   weatherPlug.sleep();
@@ -79,5 +90,24 @@ void loop(){
   sleep();  
 }
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+boolean sendIDPacket(uint8_t * pointer, uint8_t length){
+    for(int i=0; i<maxRetries;i++){
+      if( xbee.sendIDs(pointer, length) ) {
+        return true;
+      }
+    }
+    clock.setAlarm2Delta(minA2);
+    sleep();
+    return false;
+}
 
+boolean sendDataPacket(uint8_t * arrayPointer, uint8_t arrayLength){
+    for(int i=0; i<maxRetries;i++){ 
+      if( xbee.sendData(arrayPointer, arrayLength) ) {
+        return true;
+      }
+    }
+    return false;
+}
 
