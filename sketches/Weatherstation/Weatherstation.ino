@@ -96,7 +96,7 @@ boolean sendIDPacket(uint8_t * pointer, uint8_t length){
       if( xbee.sendIDs(pointer, length) ) {
         return true;
       }
-    }
+    }ex
     clock.setAlarm2Delta(minA2);
     sleep();
     return false;
