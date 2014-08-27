@@ -23,9 +23,9 @@
 #define RR_max 10    //maximum number of retries Xbee attempts before reporting error - this is the scalar
 const int maxRetries = 3;  //how many times we attempt to send packets
 
-const byte minA1 = 0;
-const byte secA1 = 15;
-const byte minA2 = 1;
+const byte minA1 = 1;
+const byte secA1 = 0;
+const byte minA2 = 5;
 
 
 
@@ -73,7 +73,7 @@ class DSB1820B: public Sensor
                 DallasTemperature dsb = DallasTemperature(&oneWire);
                 uint8_t _index;
                                 
-                DSB1820B(uint8_t index=0, uint8_t samplePeriod=1):Sensor(DSB1820B_UUID, DSB1820B_LENGTH_OF_DATA, DSB1820B_SCALE, DSB1820B_SHIFT, true, samplePeriod){
+                DSB1820B(uint8_t index=0, uint8_t samplePeriod=1):Sensor(DSB1820B_UUID, DSB1820B_LENGTH_OF_DATA, DSB1820B_SCALE, DSB1820B_SHIFT, false, samplePeriod){
                   _index = index;
                 };
                 String getName(){ return "Temperature Probe"; }
