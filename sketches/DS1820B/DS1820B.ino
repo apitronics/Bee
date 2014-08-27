@@ -1,5 +1,5 @@
 //Apitronics - DS1820B.ino
-//Aug 26
+//Aug 27
 
 #include <Clock.h>
 #include <Onboard.h>
@@ -19,9 +19,8 @@
 #define DSB1820B_SHIFT 50
 
 //counts number of Transmission Errors (TR)
-#define TR_UUID 0x0004
-#define RR_max 1    //maximum number of retries Xbee attempts before reporting error
-int TR_cntr = 0;
+#define TR_UUID 0x0003
+#define RR_max 10    //maximum number of retries Xbee attempts before reporting error - this is the scalar
 const int maxRetries = 3;  //how many times we attempt to send packets
 
 const byte minA1 = 0;
@@ -34,7 +33,7 @@ const byte minA2 = 1;
 
 
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+//~~~~~~~~~~~~~~~~~~~~~~~~~CLASSES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 //Create Sensorhub Counter for counting Transmission errors
 class Counter: public Sensor
 {
@@ -48,14 +47,14 @@ class Counter: public Sensor
             return;
         }
         void incr(){
-            _XB_TR_cntr +=1;
+            _XB_TR_cntr += RR_max;
             return;
         }
         String getName(){
           return "Xbee Transmission Attempts";
         }
         String getUnits(){
-          return "decimal";
+          return " attempts";
         }
         void getData(){
           int tmp = _XB_TR_cntr;
@@ -63,7 +62,7 @@ class Counter: public Sensor
           data[0] = tmp;
         }
       private:
-        int _XB_TR_cntr;            
+        unsigned int _XB_TR_cntr;            
 };
 
 //Create Sensorhub Sensor from DallasTemp library
