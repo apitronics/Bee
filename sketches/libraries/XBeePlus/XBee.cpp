@@ -1423,6 +1423,7 @@ uint8_t RemoteAtCommandRequest::getFrameDataLength() {
 
 void XBee::send(XBeeRequest &request) {
 	// the new new deal
+	Serial.print("begin packet: ");
 
 	sendByte(START_BYTE, false);
 
@@ -1430,10 +1431,18 @@ void XBee::send(XBeeRequest &request) {
 	uint8_t msbLen = ((request.getFrameDataLength() + 2) >> 8) & 0xff;
 	uint8_t lsbLen = (request.getFrameDataLength() + 2) & 0xff;
 
+	//DEBUG begin
+	Serial.print(msbLen, HEX);
+	Serial.print(lsbLen, HEX);
+	//DEBUG END
 	sendByte(msbLen, true);
 	sendByte(lsbLen, true);
 
 	// api id
+	//DEBUG BEGIN
+	Serial.print(request.getApiId(), HEX);
+	Serial.print(request.getFrameId(), HEX);
+	//DEBUG END
 	sendByte(request.getApiId(), true);
 	sendByte(request.getFrameId(), true);
 
@@ -1447,6 +1456,10 @@ void XBee::send(XBeeRequest &request) {
 
 	for (int i = 0; i < request.getFrameDataLength(); i++) {
 //		std::cout << "sending byte [" << static_cast<unsigned int>(i) << "] " << std::endl;
+		//DEBUG BEGIN
+		Serial.print(" ");
+		Serial.print(request.getFrameData(i),HEX);
+		//DEBUG END
 		sendByte(request.getFrameData(i), true);
 		checksum+= request.getFrameData(i);
 	}
@@ -1457,20 +1470,27 @@ void XBee::send(XBeeRequest &request) {
 //	std::cout << "checksum is " << static_cast<unsigned int>(checksum) << std::endl;
 
 	// send checksum
+	Serial.print(checksum, HEX); //debug
 	sendByte(checksum, true);
 
 	// send packet (Note: prior to Arduino 1.0 this flushed the incoming buffer, which of course was not so great)
 	flush();
+	Serial.println(" packet done");	//DEBUG
 }
 
 void XBee::sendByte(uint8_t b, bool escape) {
 
 	if (escape && (b == START_BYTE || b == ESCAPE || b == XON || b == XOFF)) {
 //		std::cout << "escaping byte [" << toHexString(b) << "] " << std::endl;
+		//DEBUG BEGIN
+		Serial.print(ESCAPE, HEX);
+		Serial.print(b ^ 0x20, HEX);
+		//DEBUG END
 		write(ESCAPE);
 		write(b ^ 0x20);
 	} else {
 		write(b);
+		//Serial.print(" " + b);
 	}
 }
 

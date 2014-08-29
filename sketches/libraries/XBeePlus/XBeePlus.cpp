@@ -119,7 +119,7 @@ bool XBeePlus::send(uint8_t * arrayPointer, uint8_t arrayLength, uint32_t addr64
 	ZBTxRequest zbTx = ZBTxRequest(addr64, arrayPointer, arrayLength);
 	//zbTx.setOption(0xAAAA);	
 	//Serial.print("Option: ");	
-	Serial.println(zbTx.getOption());
+	//Serial.println(zbTx.getOption());
 	_xbee.send(zbTx);	
 
   	if (_xbee.readPacket(5000)){
@@ -130,6 +130,7 @@ bool XBeePlus::send(uint8_t * arrayPointer, uint8_t arrayLength, uint32_t addr64
       			if (txStatus.getDeliveryStatus() == SUCCESS) {
 				#ifdef DEBUG
 				Serial.println("success");
+				Serial.println("---------------------------------------------------------------");
 				#endif	
 				// success.  time to celebrate			
 				return true;
