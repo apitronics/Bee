@@ -1424,7 +1424,8 @@ uint8_t RemoteAtCommandRequest::getFrameDataLength() {
 void XBee::send(XBeeRequest &request) {
 	// the new new deal
 	Serial.print("begin packet: ");
-
+	Serial.print(START_BYTE, HEX); //DEBUG
+	Serial.print(" "); //debug
 	sendByte(START_BYTE, false);
 
 	// send length
@@ -1433,7 +1434,9 @@ void XBee::send(XBeeRequest &request) {
 
 	//DEBUG begin
 	Serial.print(msbLen, HEX);
+	Serial.print(" ");
 	Serial.print(lsbLen, HEX);
+	Serial.print(" ");
 	//DEBUG END
 	sendByte(msbLen, true);
 	sendByte(lsbLen, true);
@@ -1441,7 +1444,9 @@ void XBee::send(XBeeRequest &request) {
 	// api id
 	//DEBUG BEGIN
 	Serial.print(request.getApiId(), HEX);
+	Serial.print(" ");
 	Serial.print(request.getFrameId(), HEX);
+	Serial.print(" ");
 	//DEBUG END
 	sendByte(request.getApiId(), true);
 	sendByte(request.getFrameId(), true);
@@ -1457,8 +1462,8 @@ void XBee::send(XBeeRequest &request) {
 	for (int i = 0; i < request.getFrameDataLength(); i++) {
 //		std::cout << "sending byte [" << static_cast<unsigned int>(i) << "] " << std::endl;
 		//DEBUG BEGIN
-		Serial.print(" ");
 		Serial.print(request.getFrameData(i),HEX);
+		Serial.print(" ");
 		//DEBUG END
 		sendByte(request.getFrameData(i), true);
 		checksum+= request.getFrameData(i);
@@ -1484,7 +1489,9 @@ void XBee::sendByte(uint8_t b, bool escape) {
 //		std::cout << "escaping byte [" << toHexString(b) << "] " << std::endl;
 		//DEBUG BEGIN
 		Serial.print(ESCAPE, HEX);
+		Serial.print(" ");
 		Serial.print(b ^ 0x20, HEX);
+		Serial.print(" ");
 		//DEBUG END
 		write(ESCAPE);
 		write(b ^ 0x20);
