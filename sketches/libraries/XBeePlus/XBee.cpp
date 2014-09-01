@@ -805,7 +805,7 @@ void XBee::flush() {
 
 void XBee::write(uint8_t val) {
 	_serial->write(val);
-	delay(1); //awful fix but can't find the pb
+	//delay(1); //awful fix but can't find the pb
 }
 
 XBeeResponse& XBee::getResponse() {

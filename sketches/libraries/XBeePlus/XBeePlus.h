@@ -13,6 +13,7 @@ class XBeePlus
 	public:
 		XBeePlus();
 		void begin(long);
+		void reset();
 		void disable();
 		void enable();
 		void refresh();

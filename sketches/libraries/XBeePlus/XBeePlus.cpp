@@ -35,6 +35,15 @@ void XBeePlus::begin(long baud)
 
 }
 
+void XBeePlus::reset(){
+	Serial4.write("\r");
+	Serial4.write("\r");
+	Serial4.write("\r");
+	Serial4.write("\r");
+}
+
+
+
 bool XBeePlus::CTS(){
 	return !(PORTF.IN>>3&0b1);
 }
@@ -97,6 +106,8 @@ bool XBeePlus::sendIDs(uint8_t * arrayPointer, uint8_t arrayLength){
 }
 
 bool XBeePlus::sendData(uint8_t * arrayPointer, uint8_t arrayLength){
+	addr64.setMsb(0x0);
+	addr64.setLsb(0xFFFF);
 	return sendApiframe(arrayPointer, arrayLength, DATA_FRAME);
 }
 
