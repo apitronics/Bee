@@ -7,6 +7,8 @@
 #include <Wire.h>  //we'll be depending on the core's Wire library
 #include <Sensorhub.h>
 #include <Bee.h>
+#include <Arduino.h>
+
 
 #define XBEE_ENABLE
 
@@ -105,6 +107,28 @@ Counter XBTR_Cntr;
 Sensor * sensor[] = {&onboardTemp, &batteryGauge, &dsb0, &dsb1, &XBTR_Cntr};
 Sensorhub sensorhub(sensor,NUM_SENSORS);
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+boolean sendIDPacket(uint8_t * pointer, uint8_t length){
+    for(int i=0; i<maxRetries;i++){
+      if( xbee.sendIDs(pointer, length) ) {
+        return true;
+      }
+    }
+    clock.setAlarm2Delta(minA2);
+    //sleep();
+    return false;
+}
+
+boolean sendDataPacket(uint8_t * arrayPointer, uint8_t arrayLength){
+    for(int i=0; i<maxRetries;i++){ 
+     XBTR_Cntr.incr(); 
+      if( xbee.sendData(arrayPointer, arrayLength) ) {
+        XBTR_Cntr.setZero();
+        return true;
+      }
+    }
+    return false;
+}
 //~~~~~~~~~~~~~~~~~~~~~ BEGIN MAIN CODE ~~~~~~~~~~~~~~~~~~~~~~~~//
 void setup(){
   delay(1000);
@@ -172,28 +196,6 @@ void loop(){
   sleep();  
 }
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-boolean sendIDPacket(uint8_t * pointer, uint8_t length){
-    for(int i=0; i<maxRetries;i++){
-      if( xbee.sendIDs(pointer, length) ) {
-        return true;
-      }
-    }
-    clock.setAlarm2Delta(minA2);
-    //sleep();
-    return false;
-}
-
-boolean sendDataPacket(uint8_t * arrayPointer, uint8_t arrayLength){
-    for(int i=0; i<maxRetries;i++){ 
-     XBTR_Cntr.incr(); 
-      if( xbee.sendData(arrayPointer, arrayLength) ) {
-        XBTR_Cntr.setZero();
-        return true;
-      }
-    }
-    return false;
-}
 
 
 

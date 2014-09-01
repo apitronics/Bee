@@ -1,0 +1,1 @@
+this is the 130303 release of LUFA, with nonessential components stripped out, and modified so it can be compiled with Arduino IDE
