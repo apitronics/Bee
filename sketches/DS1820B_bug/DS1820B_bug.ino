@@ -1,10 +1,10 @@
-//Apitronics - DS1820B.ino
-//Aug 27
+//Apitronics - DS1820B_bug.ino
+//Aug 29
 
 #include <Clock.h>
 #include <Onboard.h>
 #include <XBeePlus.h>
-#include <Wire.h>  //we'll be depending on the core's Wire library
+#include <Wire.h>
 #include <Sensorhub.h>
 #include <Bee.h>
 
@@ -23,9 +23,9 @@
 #define RR_max 10    //maximum number of retries Xbee attempts before reporting error - this is the scalar
 const int maxRetries = 5;  //how many times we attempt to send packets
 
-const byte minA1 = 1;
-const byte secA1 = 0;
-const byte minA2 = 5;
+const byte minA1 = 0;
+const byte secA1 = 5;
+const byte minA2 = 1;
 
 
 
@@ -112,6 +112,7 @@ void setup(){
   digitalWrite(5,HIGH);
   Serial.begin(57600);
   xbee.begin(9600);
+  Serial.println("############################### starting ##############################");
   Serial.print("Initialized: serial");
   
   clock.begin(date);
@@ -131,38 +132,44 @@ void setup(){
   //wait for message from Coordinator
   
  
-  xbee.refresh();
+  /*xbee.refresh();
   while(!xbee.available()){
     xbee.refresh();
   }
-  xbee.meetCoordinator();
+  xbee.meetCoordinator();*/
   
-  Serial.println(" Hive address saved.");
+  Serial.println(" Hive address (NOT) saved.");
   #endif
   Serial.println("Launching program.");
   XBTR_Cntr.setZero();
 }
 
 bool firstRun=true;
+int counter_alarms = 0;
 
 void loop(){
   //if A1 woke us up and its log time OR if its the first run OR if the button has been pushed
   bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
   clock.print();
+  
   if( clock.triggeredByA1() ||  buttonPressed || firstRun){
     Serial.println("Sampling sensors:");
-    sensorhub.sample(true);
+    sensorhub.sample();
     clock.setAlarm1Delta(minA1, secA1);
+    counter_alarms++;
   }
   
-  if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
+ // if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
+   if( clock.triggeredByA1() ||  buttonPressed ||firstRun ){
     xbee.enable();
     Serial.println("Creating datapoint from samples");
     sensorhub.log(true);
     #ifdef XBEE_ENABLE
     sendDataPacket(&sensorhub.data[0], sensorhub.getDataSize());
     #endif
-    clock.setAlarm2Delta(minA2);
+    //clock.setAlarm2Delta(minA2);
+    counter_alarms = 0;
+    clock.setAlarm1Delta(minA1, secA1);
   }
   firstRun=false;
  
@@ -187,6 +194,15 @@ boolean sendIDPacket(uint8_t * pointer, uint8_t length){
 boolean sendDataPacket(uint8_t * arrayPointer, uint8_t arrayLength){
     for(int i=0; i<maxRetries;i++){ 
      XBTR_Cntr.incr(); 
+      if( xbee.sendData(arrayPointer, arrayLength) ) {
+        XBTR_Cntr.setZero();
+        return true;
+      }
+    }
+    
+    xbee.reset();
+    for(int i=0; i<maxRetries;i++){ 
+      XBTR_Cntr.incr(); 
       if( xbee.sendData(arrayPointer, arrayLength) ) {
         XBTR_Cntr.setZero();
         return true;

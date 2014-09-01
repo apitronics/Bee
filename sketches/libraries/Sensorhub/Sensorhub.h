@@ -68,6 +68,7 @@ class Sensor
 		};
 
 		//simple averaging of the samples
+		//debug set print to true
 		void log(bool print=false){
 			//we could do this averaging operation on the array itself
 			//but right now let's assume the largest data is 32 bits
@@ -170,8 +171,8 @@ class Sensorhub
 		void init(){
 			for (int i=0; i<_size;i++) sensors[i]->init();
 		}
-	
-		void sample(bool print=false){
+		//aug 29 - changed print to true for debug
+		void sample(bool print=true){
 			for (int i=0; i<_size;i++){
 				if (_count%sensors[i]->getSamplePeriod()==0)
 					sensors[i]->sample(print);

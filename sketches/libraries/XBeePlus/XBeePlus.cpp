@@ -35,6 +35,15 @@ void XBeePlus::begin(long baud)
 
 }
 
+void XBeePlus::reset(){
+	Serial4.write("\r");
+	Serial4.write("\r");
+	Serial4.write("\r");
+	Serial4.write("\r");
+}
+
+
+
 bool XBeePlus::CTS(){
 	return !(PORTF.IN>>3&0b1);
 }
@@ -97,6 +106,8 @@ bool XBeePlus::sendIDs(uint8_t * arrayPointer, uint8_t arrayLength){
 }
 
 bool XBeePlus::sendData(uint8_t * arrayPointer, uint8_t arrayLength){
+	addr64.setMsb(0x0);
+	addr64.setLsb(0xFFFF);
 	return sendApiframe(arrayPointer, arrayLength, DATA_FRAME);
 }
 
@@ -119,7 +130,7 @@ bool XBeePlus::send(uint8_t * arrayPointer, uint8_t arrayLength, uint32_t addr64
 	ZBTxRequest zbTx = ZBTxRequest(addr64, arrayPointer, arrayLength);
 	//zbTx.setOption(0xAAAA);	
 	//Serial.print("Option: ");	
-	Serial.println(zbTx.getOption());
+	//Serial.println(zbTx.getOption());
 	_xbee.send(zbTx);	
 
   	if (_xbee.readPacket(5000)){
@@ -130,6 +141,7 @@ bool XBeePlus::send(uint8_t * arrayPointer, uint8_t arrayLength, uint32_t addr64
       			if (txStatus.getDeliveryStatus() == SUCCESS) {
 				#ifdef DEBUG
 				Serial.println("success");
+				Serial.println("---------------------------------------------------------------");
 				#endif	
 				// success.  time to celebrate			
 				return true;
