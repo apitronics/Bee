@@ -42,8 +42,10 @@ void XBeePlus::begin(long baud)
 
 }
 
-void XBeePlus::hardReset(uint16_t pulse_ms = 10)
-{//add Xbee Hard Reset from PD1 - Sept2
+void XBeePlus::hardReset()
+{//add Xbee Hard Reset from PD1 - Sept. 2
+	uint16_t pulse_ms = 100;
+	Serial.println("Xbee hard reset");
 	PORTD.OUT &= ~(0x02);  //PD1 on (pull down)
 	delay(pulse_ms);
 	PORTD.OUT |= (0x02);   //PD1 off (open collector)
