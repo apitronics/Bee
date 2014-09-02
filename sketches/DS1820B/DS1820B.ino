@@ -1,5 +1,5 @@
 //Apitronics - DS1820B.ino
-//Aug 27
+//Sept 2
 
 #include <Clock.h>
 #include <Onboard.h>
@@ -107,11 +107,13 @@ Sensorhub sensorhub(sensor,NUM_SENSORS);
 
 //~~~~~~~~~~~~~~~~~~~~~ BEGIN MAIN CODE ~~~~~~~~~~~~~~~~~~~~~~~~//
 void setup(){
-  delay(1000);
+  delay(3000);
   pinMode(5,OUTPUT);
+  
   digitalWrite(5,HIGH);
   Serial.begin(57600);
-  xbee.begin(9600);
+  xbee.begin(57600);
+  xbee.hardReset(3000);
   Serial.print("Initialized: serial");
   
   clock.begin(date);
