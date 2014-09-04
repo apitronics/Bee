@@ -8,23 +8,27 @@ LufaXmegaSerial USBSerial;
 //pin (PF5).  0b0010 0000 = 0x32
 int PIN_TO_DETECT_CONNECTED_USB = 0x32;
 
-
 void setup() {
+  // Serial.begin(57600);
+  // Serial.println("starting");
+  PORTC.DIRSET = PIN7_bm; //D13 as output
+  PORTC.OUTSET = PIN7_bm; //turn on LED
+  delay(1000);
 	USBSerial.begin(9600);
-        PORTC.DIR= (1 << 7);  //These two lines turn on a 
-        PORTC.OUTSET = (1<<PIN7);  //debugging LED on digital pin 7
+
         
 }
 
 void check_for_serial_communication(void) {
   
   USBSerial.task(); // call this often
-  
+  // Serial.println("called serial check");
   int received_command = 0;
   while (USBSerial.available() > 0) {
     received_command = USBSerial.read();
     if (received_command == 'P') {  //If a specific cmd is sent, turn off.
       USBSerial.write("shutting down");
+      // Serial.println("shutting down mcu");
       delay(500);
       USBSerial.write("\r");
       USBSerial.write("\n"); 
@@ -43,8 +47,13 @@ void check_for_serial_communication(void) {
 void loop()
 {
   USBSerial.task(); // call this often
-  
+  delay(1000);
+  Serial.print(".");
+
   if (PORTF.IN & PIN_TO_DETECT_CONNECTED_USB) {  //If the Bee detects that the USB cable is plugged in. 
+    PORTC.OUTCLR = PIN7_bm; //turn off LED
     check_for_serial_communication();            //then check if there's serial data coming in.
+
   }
+  delay(1);
 }

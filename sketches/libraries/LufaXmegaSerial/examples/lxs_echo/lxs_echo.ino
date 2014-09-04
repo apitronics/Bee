@@ -8,10 +8,17 @@
 
 LufaXmegaSerial USBSerial;
 
+int i = 0;
+
 void setup()
 {
 	// the baud rate is actually meaningless since USB virtual serial ports don't care
-	USBSerial.begin(9600);
+	PORTC.DIRSET = PIN7_bm; //D13 as output
+  	PORTC.OUTSET = PIN7_bm; //turn on LED
+  	delay(1000);
+	USBSerial.begin(57600);
+	USBSerial.write("hello\r\n");
+
 }
 
 void loop()
@@ -24,4 +31,12 @@ void loop()
 
 	USBSerial.task(); // call this often
 	// note: all of the other functions calls "task()" internally as well, so if you always call "available()", you are already calling "task()"
+	i++;
+	if(i >= 30000){
+		i = 0;
+		PORTC.OUTCLR = PIN7_bm; //turn on LED
+	  	delay(1000);
+  	  	PORTC.OUTSET = PIN7_bm; //turn on LED
+		USBSerial.write("running...\r\n");
+	}
 }
