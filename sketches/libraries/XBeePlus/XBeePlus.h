@@ -26,6 +26,7 @@ class XBeePlus
 		bool ready();
 		bool CTS();
 		void meetCoordinator();
+		void hardReset();
 	private:
 		ZBTxStatusResponse txStatus;
 		XBeeAddress64 addr64;

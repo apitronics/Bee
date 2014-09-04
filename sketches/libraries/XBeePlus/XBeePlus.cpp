@@ -33,6 +33,22 @@ void XBeePlus::begin(long baud)
 	Serial4.begin(baud);
 	_xbee.setSerial(Serial4);
 
+	//begin Xbee Reset Add - Sept 2: for hard reset to Xbee from PortD.Pin1
+	PORTD.PIN1CTRL = 0b00101111; //OPC = 101 -> WiredAND / ISC = 111 -> INPUT_DISABLE
+	PORTD.OUT |= (0x02);  		 //PD1 off (open collector) Note* pin output is inverted
+	PORTD.DIR |= (1<<1);         //pin 1 is set to output
+	//end XBee Reset Add
+
+
+}
+
+void XBeePlus::hardReset()
+{//add Xbee Hard Reset from PD1 - Sept. 2
+	uint16_t pulse_ms = 100;
+	Serial.println("Xbee hard reset");
+	PORTD.OUT &= ~(0x02);  //PD1 on (pull down)
+	delay(pulse_ms);
+	PORTD.OUT |= (0x02);   //PD1 off (open collector)
 }
 
 void XBeePlus::reset(){

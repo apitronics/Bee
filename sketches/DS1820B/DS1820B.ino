@@ -1,5 +1,5 @@
 //Apitronics - DS1820B.ino
-//Aug 27
+//Sept 4
 
 #include <Clock.h>
 #include <Onboard.h>
@@ -107,11 +107,13 @@ Sensorhub sensorhub(sensor,NUM_SENSORS);
 
 //~~~~~~~~~~~~~~~~~~~~~ BEGIN MAIN CODE ~~~~~~~~~~~~~~~~~~~~~~~~//
 void setup(){
-  delay(1000);
+  delay(2000);
   pinMode(5,OUTPUT);
+  
   digitalWrite(5,HIGH);
   Serial.begin(57600);
-  xbee.begin(9600);
+  xbee.begin(57600);
+  //xbee.hardReset();
   Serial.print("Initialized: serial");
   
   clock.begin(date);
@@ -122,19 +124,40 @@ void setup(){
   Serial.println(", sensors");
   
   #ifdef XBEE_ENABLE
-  Serial.print("Connecting to Hive...");
-  //send IDs packet until reception is acknowledged'
   
-  while(!sendIDPacket(&sensorhub.ids[0],UUID_WIDTH*NUM_SENSORS));  
+  const int refreshPeriod = 2000;
+  bool connected2Hive = false;
+  unsigned int refreshCntr = 0;
+  do
+      {
+      Serial.println("Connecting to Hive...");
+      //send IDs packet until reception is acknowledged'
+      while(!sendIDPacket(&sensorhub.ids[0],UUID_WIDTH*NUM_SENSORS));  
+      Serial.println(" Hive received packet...");
+      //wait for message from Coordinator
+      xbee.refresh();
+      Serial.print("refreshing");
+      while(!xbee.available()){
+        xbee.refresh();
+        Serial.print(".");
+        delay(1);
+        connected2Hive = true;
+        refreshCntr++;
+        if (refreshCntr % refreshPeriod == 0){
+          if (refreshCntr >= (refreshPeriod*3)){
+              clock.setAlarm2Delta(minA2);
+              xbee.hardReset();
+              sleep();
+              refreshCntr = 0;        
+           }
+          connected2Hive = false;
+          break;
+        }
+      }
+  } while(!connected2Hive);
   
-  Serial.print(" Hive received packet...");
-  //wait for message from Coordinator
   
- 
-  xbee.refresh();
-  while(!xbee.available()){
-    xbee.refresh();
-  }
+  Serial.println("done");
   xbee.meetCoordinator();
   
   Serial.println(" Hive address saved.");
@@ -178,8 +201,13 @@ boolean sendIDPacket(uint8_t * pointer, uint8_t length){
       if( xbee.sendIDs(pointer, length) ) {
         return true;
       }
+      if (maxRetries - i == 2){
+        xbee.hardReset();
+        delay(100);
+      }
     }
     clock.setAlarm2Delta(minA2);
+    xbee.hardReset();
     sleep();
     return false;
 }
@@ -191,7 +219,12 @@ boolean sendDataPacket(uint8_t * arrayPointer, uint8_t arrayLength){
         XBTR_Cntr.setZero();
         return true;
       }
+      if (maxRetries - i == 2){
+        xbee.hardReset();
+        delay(100);
+      }
     }
+    xbee.hardReset();
     return false;
 }
 
