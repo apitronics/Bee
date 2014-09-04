@@ -1,5 +1,5 @@
 //Apitronics - DS1820B.ino
-//Sept 2
+//Sept 4
 
 #include <Clock.h>
 #include <Onboard.h>
@@ -23,9 +23,9 @@
 #define RR_max 10    //maximum number of retries Xbee attempts before reporting error - this is the scalar
 const int maxRetries = 5;  //how many times we attempt to send packets
 
-const byte minA1 = 0;
-const byte secA1 = 10;
-const byte minA2 = 1;
+const byte minA1 = 1;
+const byte secA1 = 0;
+const byte minA2 = 5;
 
 
 
