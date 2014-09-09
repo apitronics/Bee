@@ -1,48 +1,39 @@
 /*
- * DiffPressureSensor
- * written for MP3V5010DP differential pressure sensor
- * for use with Apitronics Bee
+ * AnalogSensor
+ * written for XMEGA ADC with PORTA
  * utilizing XMEGA ADC Examples by Scott_Schmit
  *
- * Created: 9/8/2014
+ * Created: 9/9/2014
  *  Author: Colin Dignam
  *
- * MP3V5010 pressure sensor:
- *  Nominal Transfer Value: Vout = VS x (0.09 x P + 0.08)
-      ± (Pressure Error x Temp. Factor x 0.09 x VS)
-    VS = 3.0 V ± 0.30 Vdc
- * Temp. Factor = 1 for 0 to 85 degC
+ * Use _ADC_ERR_SHIFT and _ADC_GAIN to calibrate Voltage 
  */
 
-#ifndef DiffPressureSensor_H
-#define DiffPressureSensor_H
-
-#define DEBUG
-
+#ifndef AnalogSensor_H
+#define AnalogSensor_H
 
 #include <Sensorhub.h>
-
 #include <avr/io.h>
 // These 2 files need to be included in order to read
 // the production calibration values from EEPROM
 #include <avr/pgmspace.h>
 #include <stddef.h>
-
-#define MP3V5010DP_UUID 0x0019
-#define MP3V5010DP_LENGTH_OF_DATA 2
-#define MP3V5010DP_SCALE 1
-#define MP3V5010DP_SHIFT 0
-
- #define MP3_ADC_ERR_SHIFT (-165)
- #define MP3_ADC_GAIN 2.06
-
+ #define ADC_ERR_SHIFT (-165)
+ #define ADC_GAIN 2.06
+ #define DEBUG 
 
 //using Sensorhub.h library for sensor definition
-class DiffPressureSensor: public Sensor
+class AnalogSensor: public Sensor
 {
       public:
-        DiffPressureSensor(uint8_t analogPin):Sensor(MP3V5010DP_UUID, MP3V5010DP_LENGTH_OF_DATA, MP3V5010DP_SCALE, MP3V5010DP_SHIFT, false, 1)
+        AnalogSensor(uint8_t analogPin, const uint16_t uuid, const uint8_t dataWidthBytes, const uint16_t scale, const uint16_t shift, bool logIsSample=false, uint16_t samplePeriod=1):Sensor(uuid, dataWidthBytes, scale, shift, logIsSample, samplePeriod)
         {
+          _uuid = uuid;       // 16 bit UUID
+          _size = dataWidthBytes;     // width of data, in bytes
+          _scale=scale;
+          _shift=shift;
+          _logIsSample = logIsSample;
+          _samplePeriod = samplePeriod;
           //We are only using Port A pins 1 through 6
           if (analogPin > 6)
           {
@@ -77,8 +68,13 @@ class DiffPressureSensor: public Sensor
 
         void getData()
         {                  
-          float sample = readSensorADC();
-          uint16_t tmp = (sample + MP3V5010DP_SHIFT) * MP3V5010DP_SCALE;
+          uint16_t tmp = (readSensorADC() + _shift) * _scale;
+          #ifdef DEBUG
+          Serial.print("Analog Sensor ");
+          Serial.print(_analogPin);
+          Serial.print(" value: ");
+          Serial.println(tmp);
+          #endif
           data[1]=tmp>>8;
           data[0]=tmp;
         }  
@@ -127,12 +123,11 @@ class DiffPressureSensor: public Sensor
               while(!ADCA.CH1.INTFLAGS);
               delay(5);
               sample+=ADCA.CH1.RES;
-            }
+          }
           sample >>= 3;
-          float resultADC = ((float)(sample + MP3_ADC_ERR_SHIFT)/4096)*MP3_ADC_GAIN; //convert to mV
+          float resultADC = ((float)(sample + ADC_ERR_SHIFT)/4096)*ADC_GAIN; //convert to mV
           #ifdef DEBUG
-
-          Serial.print("P Sensor ");
+          Serial.print("Pin ");
           Serial.print(_analogPin);
           Serial.print(": ");
           Serial.print(sample);
@@ -144,15 +139,21 @@ class DiffPressureSensor: public Sensor
         }
 
         String getName(){
-          return "Diff Pressure Sensor";
+          return "Analog Sensor" + _analogPin ;
         }
         String getUnits(){
-          return " mV";
+          return " V";
         }
 
       private:
-        unsigned int _result;
         uint8_t _analogPin;
+
+        uint16_t _uuid;
+        uint8_t _size; 
+        uint16_t _scale;
+        uint16_t _shift;
+        bool _logIsSample;
+        uint16_t _samplePeriod;
         
         uint8_t ReadCalibrationByte(uint8_t index) {
           uint8_t result;
@@ -165,4 +166,4 @@ class DiffPressureSensor: public Sensor
           
 };
 
-#endif  /* END DiffPressureSensor_H */
+#endif  /* END AnalogSensor_H */
