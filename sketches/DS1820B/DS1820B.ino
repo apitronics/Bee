@@ -1,3 +1,5 @@
+
+
 //Apitronics - DS1820B.ino
 //Sept 4
 
@@ -7,11 +9,12 @@
 #include <Wire.h>  //we'll be depending on the core's Wire library
 #include <Sensorhub.h>
 #include <Bee.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
 
 #define XBEE_ENABLE
 
-#include <OneWire.h>
-#include <DallasTemperature.h>
 
 #define DSB1820B_UUID 0x0018
 #define DSB1820B_LENGTH_OF_DATA 2

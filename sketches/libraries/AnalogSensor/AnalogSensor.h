@@ -12,7 +12,7 @@
 #ifndef AnalogSensor_H
 #define AnalogSensor_H
 
-#include <Sensorhub.h>
+#include "Sensorhub.h"
 #include <avr/io.h>
 // These 2 files need to be included in order to read
 // the production calibration values from EEPROM
@@ -20,7 +20,7 @@
 #include <stddef.h>
  #define ADC_ERR_SHIFT (-165)
  #define ADC_GAIN 2.06
- #define DEBUG 
+ //#define DEBUG 
 
 //using Sensorhub.h library for sensor definition
 class AnalogSensor: public Sensor
@@ -68,18 +68,13 @@ class AnalogSensor: public Sensor
 
         void getData()
         {                  
-          uint16_t tmp = (readSensorADC() + _shift) * _scale;
-          #ifdef DEBUG
-          Serial.print("Analog Sensor ");
-          Serial.print(_analogPin);
-          Serial.print(" value: ");
-          Serial.println(tmp);
-          #endif
+          uint16_t tmp = (readADC() + _shift) * _scale;
+
           data[1]=tmp>>8;
           data[0]=tmp;
         }  
 
-        float readSensorADC()
+        float readADC()
         {
           PORTA.DIRCLR = (1<<_analogPin); //set analog pin to input
           ADCA.CTRLB = ADC_RESOLUTION_12BIT_gc;    // 12 bit conversion
@@ -139,7 +134,8 @@ class AnalogSensor: public Sensor
         }
 
         String getName(){
-          return "Analog Sensor" + _analogPin ;
+          String Sname = "Analog Sensor " + String(_analogPin);
+          return Sname;
         }
         String getUnits(){
           return " V";
