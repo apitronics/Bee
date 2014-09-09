@@ -33,6 +33,9 @@
 #define MP3V5010DP_SCALE 1
 #define MP3V5010DP_SHIFT 0
 
+ #define MP3_ADC_ERR_SHIFT (-165)
+ #define MP3_ADC_GAIN 2.06
+
 
 //using Sensorhub.h library for sensor definition
 class DiffPressureSensor: public Sensor
@@ -84,8 +87,8 @@ class DiffPressureSensor: public Sensor
         {
           PORTA.DIRCLR = (1<<_analogPin); //set analog pin to input
           ADCA.CTRLB = ADC_RESOLUTION_12BIT_gc;    // 12 bit conversion
-          // Set Vref to Vcc/1.6.  This gives 3.3/2.0 = approx 1.65V
-          ADCA.REFCTRL = ADC_REFSEL2_bm; // 0b01000000
+          // Set Vref to External reference from AREF pin on PORT A
+          ADCA.REFCTRL = ADC_REFSEL1_bm; //(1<<5)
           // Set ADC clock to 125kHz:  CPU_per/64    =>    8MHz/64 = 125kHz
           ADCA.PRESCALER = ADC_PRESCALER2_bm;
           //We're going to use CH1 for Pressure Sensors (channel 0 is used by Onboard Temp sensing)
@@ -126,7 +129,7 @@ class DiffPressureSensor: public Sensor
               sample+=ADCA.CH1.RES;
             }
           sample >>= 3;
-          float resultADC = ((float)sample/4096)*1.65; //convert to mV
+          float resultADC = ((float)(sample + MP3_ADC_ERR_SHIFT)/4096)*MP3_ADC_GAIN; //convert to mV
           #ifdef DEBUG
 
           Serial.print("P Sensor ");
@@ -135,7 +138,7 @@ class DiffPressureSensor: public Sensor
           Serial.print(sample);
           Serial.print("  ");
           Serial.print(resultADC);
-          Serial.println("mV");
+          Serial.println("V");
           #endif
           return resultADC;
         }
