@@ -1,7 +1,13 @@
+//Apitronics - Motor_shield_proto.ino
+//Sept 9
+//by Colin Dignam
+//
+//Sensors:  3 x MP3V5010 diff pressure @ AD0-AD2
+//          1 x temp sensors @ D2
+//          1 x I_sense @ AD3
 
 
-//Apitronics - DS1820B.ino
-//Sept 4
+
 
 #include <Clock.h>
 #include <Onboard.h>
@@ -11,9 +17,10 @@
 #include <Bee.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-
+#include <AnalogSensor.h>
 
 #define XBEE_ENABLE
+
 
 
 #define DSB1820B_UUID 0x0018
@@ -26,10 +33,31 @@
 #define RR_max 10    //maximum number of retries Xbee attempts before reporting error - this is the scalar
 const int maxRetries = 5;  //how many times we attempt to send packets
 
-const byte minA1 = 1;
-const byte secA1 = 0;
-const byte minA2 = 5;
+const byte minA1 = 0;
+const byte secA1 = 10;
+const byte minA2 = 1;
 
+#define MP3V5010_UUID 0x0019
+#define MP3V5010_LENGTH_OF_DATA 2
+#define MP3V5010_SCALE 1000
+#define MP3V5010_SHIFT 0
+
+#define ISENS_UUID 0x0020
+#define ISENS_LENGTH_OF_DATA 2
+#define ISENS_SCALE 1000
+#define ISENS_SHIFT 0
+
+const uint8_t DP1_pin = 1;    //PORTA:1
+const uint8_t DP2_pin = 2;    //PORTA:2
+const uint8_t DP3_pin = 3;    //PORTA:3
+const uint8_t ISense_pin = 4;  //PORTA:4
+
+
+  AnalogSensor DPressure1 = AnalogSensor(DP1_pin, MP3V5010_UUID, MP3V5010_LENGTH_OF_DATA, MP3V5010_SCALE, MP3V5010_SHIFT);
+  AnalogSensor DPressure2 = AnalogSensor(DP2_pin, MP3V5010_UUID, MP3V5010_LENGTH_OF_DATA, MP3V5010_SCALE, MP3V5010_SHIFT);
+  AnalogSensor DPressure3 = AnalogSensor(DP3_pin, MP3V5010_UUID, MP3V5010_LENGTH_OF_DATA, MP3V5010_SCALE, MP3V5010_SHIFT);
+  
+  AnalogSensor ISensor = AnalogSensor(ISense_pin, ISENS_UUID, ISENS_LENGTH_OF_DATA, ISENS_SCALE, ISENS_SHIFT);
 
 
 
@@ -101,11 +129,10 @@ DateTime date = DateTime(__DATE__, __TIME__);
 OnboardTemperature onboardTemp;
 BatteryGauge batteryGauge;
 DSB1820B dsb0;
-DSB1820B dsb1(1);
 Counter XBTR_Cntr;
 
-#define NUM_SENSORS 5
-Sensor * sensor[] = {&onboardTemp, &batteryGauge, &dsb0, &dsb1, &XBTR_Cntr};
+#define NUM_SENSORS 8
+Sensor * sensor[] = {&onboardTemp, &batteryGauge, &dsb0, &DPressure1, &DPressure2, &DPressure3, &ISensor, &XBTR_Cntr};
 Sensorhub sensorhub(sensor,NUM_SENSORS);
 
 //~~~~~~~~~~~~~~~~~~~~~ BEGIN MAIN CODE ~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -171,6 +198,7 @@ void setup(){
 
 bool firstRun=true;
 
+
 void loop(){
   //if A1 woke us up and its log time OR if its the first run OR if the button has been pushed
   bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
@@ -181,7 +209,7 @@ void loop(){
     clock.setAlarm1Delta(minA1, secA1);
   }
   
-  if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
+  if( clock.triggeredByA2() ||  buttonPressed ||firstRun){
     xbee.enable();
     Serial.println("Creating datapoint from samples");
     sensorhub.log(true);

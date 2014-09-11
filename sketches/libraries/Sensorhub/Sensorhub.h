@@ -87,14 +87,17 @@ class Sensor
 				}
 			}
 			else getData();
-			if(print) { printData(); }
+			if(print) 
+			{
+			 printData(); 
+			}
 		};
 
 		void getData(bool print){
 			getData();
-                  	if(print){
-                    		printData();
-                  	}
+          	if(print){
+	    		printData();
+          	}
 		};
 
 		void printData(){
