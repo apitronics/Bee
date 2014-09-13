@@ -37,7 +37,7 @@ void setup(){
   pinMode(5,OUTPUT);
   digitalWrite(5,HIGH);
   Serial.begin(57600);
-  xbee.begin(9600);
+  xbee.begin(57600);
   Serial.print("Initialized: serial");
   
   clock.begin(date);
@@ -47,19 +47,45 @@ void setup(){
   sensorhub.init();
   Serial.println(", sensors");
   
-  Serial.print("Connecting to Hive...");
-  //send IDs packet until reception is acknowledged
-  while(!sendIDPacket(&sensorhub.ids[0],UUID_WIDTH*NUM_SENSORS)); 
-  Serial.print(" Hive received packet...");
-  //wait for message from Coordinator
+  #ifdef XBEE_ENABLE
   
-  xbee.refresh();
-  while(!xbee.available()){
-    xbee.refresh();
-  }
+  const int refreshPeriod = 2000;
+  bool connected2Hive = false;
+  unsigned int refreshCntr = 0;
+  do
+      {
+      Serial.println("Connecting to Hive...");
+      //send IDs packet until reception is acknowledged'
+      while(!sendIDPacket(&sensorhub.ids[0],UUID_WIDTH*NUM_SENSORS));  
+      Serial.println(" Hive received packet...");
+      //wait for message from Coordinator
+      xbee.refresh();
+      Serial.print("refreshing");
+      while(!xbee.available()){
+        xbee.refresh();
+        Serial.print(".");
+        delay(1);
+        connected2Hive = true;
+        refreshCntr++;
+        if (refreshCntr % refreshPeriod == 0){
+          if (refreshCntr >= (refreshPeriod*3)){
+              clock.setAlarm2Delta(minA2);
+              xbee.hardReset();
+              sleep();
+              refreshCntr = 0;        
+           }
+          connected2Hive = false;
+          break;
+        }
+      }
+  } while(!connected2Hive);
+  
+  
+  Serial.println("done");
   xbee.meetCoordinator();
   
   Serial.println(" Hive address saved.");
+  #endif
   Serial.println("Launching program.");
 }
 
