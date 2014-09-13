@@ -6,23 +6,24 @@
  *  Author: Colin Dignam
  *
  */
-#include <iostream>
-using namespace std;
-
-int main ()
-{
-  cout << "Hello World! ";
- return 0;
-}
 
 #ifndef BeeDevices_H
 #define BeeDevices_H 
-//cout << "hello world!";
+
+#include <iostream>
+using namespace std;
 
 class BeeDevice
 {
 public:
-	BeeDevice();
+	BeeDevice(){
+
+	}
+
+	void sayHello(){
+		cout << "hello";
+	}
+
 	
 
 	
