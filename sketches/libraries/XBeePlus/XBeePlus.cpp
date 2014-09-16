@@ -112,12 +112,12 @@ uint8_t * XBeePlus::getData(){
 	return &data[0];
 }
 
-uint8_t XBeePlus::getDataLength()
+uint8_t XBeePlus::getResponseLength()
 {
 	_xbee.getResponse().getZBRxResponse(rx);
 	return rx.getDataLength();
 }
-uint8_t getResponseByte(int index)
+uint8_t XBeePlus::getResponseByte(int index)
 {
 	_xbee.getResponse().getZBRxResponse(rx);
 	return rx.getData(index);

@@ -16,7 +16,15 @@
 
 
 #define XBEE_ENABLE
+DateTime date = DateTime(__DATE__, __TIME__);
 
+OnboardTemperature onboardTemp;
+BatteryGauge batteryGauge;
+BeeDevice myBee;
+
+#define NUM_SENSORS 5
+Sensor * sensor[] = {&onboardTemp, &batteryGauge};
+Sensorhub sensorhub(sensor,NUM_SENSORS);
 
  //maximum number of retries Xbee attempts before reporting error - this is the scalar
 const int maxRetries = 5;  //how many times we attempt to send packets
@@ -28,7 +36,7 @@ bool sleep_enabled = true;
 uint16_t response_timeout_ms = 5000;
 
 
-BeeDevice myBee;
+
 
 void setup()
 {
@@ -66,10 +74,14 @@ void loop()
 {
   bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
   clock.print();
-
-  sampleDevices();
-
-  logDevices();
+  if( clock.triggeredByA1() ||  buttonPressed || firstRun)
+  {
+    sampleDevices();
+  }
+  if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun))
+  {
+    logDevices();
+  }
 
 firstRun=false;
 #ifdef XBEE_ENABLE
@@ -188,19 +200,13 @@ void explicitBee()
 
 void sampleDevices()
 {
-
-  if( clock.triggeredByA1() ||  buttonPressed || firstRun)
-  {
     Serial.println("Sampling sensors:");
     sensorhub.sample(true);
     clock.setAlarm1Delta(minA1, secA1);
-  }
 }
 
 void logDevices()
 {
-    if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun))
-    {
       xbee.enable();
       Serial.println("Logging datapoint from samples");
       sensorhub.log(true);
@@ -213,17 +219,20 @@ void logDevices()
 
       #endif
       clock.setAlarm2Delta(minA2);
-    }
 }
 
 void parseResponse()
 {
   #ifdef XBEE_ENABLE
-  int index = (int)xbee.getDataLength();
+  int index = (int)xbee.getResponseLength();
   uint8_t dataByte = 0;
   for(int i=0; i<index; i++){
-      dataByte = xbee.getResponseByte(index);
-      
+      dataByte = xbee.getResponseByte(i);
+
+      Serial.println("here comes data:");
+      Serial.println(dataByte, HEX);
+
+
   }
 
 
