@@ -15,15 +15,43 @@
 
 
 
+
+//-------------------------------------------//
+class Dummy: public Sensor
+{
+      public:
+        Dummy(uint16_t myUUID):Sensor(myUUID, 2, 1, 0, true, 1)
+        {
+          _myUUID = myUUID;
+        }
+        void init(){
+        }
+        String getName(){
+          return "dummy";
+        }
+        String getUnits(){
+          return " units";
+        }
+        void getData(){
+          int tmp = 0;
+          data[1] = tmp >> 8;
+          data[0] = tmp;
+        }
+      private:
+        uint16_t _myUUID;
+};
+//------------------------------------------//
+
 #define XBEE_ENABLE
 DateTime date = DateTime(__DATE__, __TIME__);
 
 OnboardTemperature onboardTemp;
 BatteryGauge batteryGauge;
 BeeDevice myBee;
+Dummy dummyBee(0x8000);
 
-#define NUM_SENSORS 5
-Sensor * sensor[] = {&onboardTemp, &batteryGauge};
+#define NUM_SENSORS 3
+Sensor * sensor[] = {&onboardTemp, &batteryGauge, &dummyBee};
 Sensorhub sensorhub(sensor,NUM_SENSORS);
 
  //maximum number of retries Xbee attempts before reporting error - this is the scalar
@@ -34,9 +62,6 @@ byte secA1 = 30;
 byte minA2 = 1;
 bool sleep_enabled = true;
 uint16_t response_timeout_ms = 5000;
-
-
-
 
 void setup()
 {
@@ -55,9 +80,9 @@ void setup()
   sensorhub.init();
   Serial.println(", sensors");
 
-  initXbee();
+  initBee();
 
-  explicitBee();
+  explicitBeeDevice();
   minA1 = myBee.getSampleMin();
   secA1 = myBee.getSampleSecR();
   minA2 = myBee.getLogMin();
@@ -92,51 +117,8 @@ sleep();
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-boolean sendIDPacket(uint8_t * pointer, uint8_t length){
-    for(int i=0; i<maxRetries;i++){
-      if( xbee.sendIDs(pointer, length) ) {
-        return true;
-      }
-      if (maxRetries - i == 2){
-        delay(100);
-      }
-    }
-    clock.setAlarm2Delta(minA2);
-    sleep();
-    return false;
-}
 
-boolean sendDataPacket(uint8_t * arrayPointer, uint8_t arrayLength){
-    for(int i=0; i<maxRetries;i++){ 
-      if( xbee.sendData(arrayPointer, arrayLength) ) {
-        return true;
-      }
-      if (maxRetries - i == 2){
-        delay(100);
-      }
-    }
-    return false;
-}
-
-bool waitforResponse(uint16_t timeout_ms = 2000)
-{
-  unsigned int refreshCntr = 0;
-  xbee.refresh();
-      Serial.print("waiting for response");
-      while(!xbee.available()){
-        xbee.refresh();
-        Serial.print(".");
-        delay(1);
-        return true;
-        refreshCntr++;
-        if (refreshCntr >= timeout_ms){
-          return false;
-        }
-      }
-  return false;
-}
-
-void initXbee()
+void initBee()
 {
   #ifdef XBEE_ENABLE
   
@@ -180,7 +162,7 @@ void initXbee()
 
 }
 
-void explicitBee()
+void explicitBeeDevice()
 {
   Serial.println("my Bee settings:");
   
@@ -196,6 +178,68 @@ void explicitBee()
   Serial.print("sleep: ");
   Serial.println(myBee.isSleepEnable());
 
+}
+
+
+bool waitforResponse(uint16_t timeout_ms = 2000)
+{
+  unsigned int refreshCntr = 0;
+  xbee.refresh();
+      Serial.print("waiting for response");
+      while(!xbee.available()){
+        xbee.refresh();
+        Serial.print(".");
+        delay(1);
+        return true;
+        refreshCntr++;
+        if (refreshCntr >= timeout_ms){
+          return false;
+        }
+      }
+  return false;
+}
+
+
+
+void parseResponse()
+{
+  #ifdef XBEE_ENABLE
+  int index = (int)xbee.getResponseLength();
+  uint8_t dataByte = 0;
+  for(int i=0; i<index; i++){
+      dataByte = xbee.getResponseByte(i);
+
+      Serial.println("here comes data:");
+      Serial.println(dataByte, HEX);
+  }
+  #endif
+}
+
+
+boolean sendIDPacket(uint8_t * pointer, uint8_t length){
+    for(int i=0; i<maxRetries;i++){
+      if( xbee.sendIDs(pointer, length) ) {
+        return true;
+      }
+      if (maxRetries - i == 2){
+        delay(100);
+      }
+    }
+    clock.setAlarm2Delta(minA2);
+    sleep();
+    return false;
+}
+
+boolean sendDataPacket(uint8_t * arrayPointer, uint8_t arrayLength){
+    for(int i=0; i<maxRetries;i++){ 
+      if( xbee.sendData(arrayPointer, arrayLength) ) {
+        return true;
+      }
+      if (maxRetries - i == 2){
+        delay(100);
+      }
+    }
+    return false;
 }
 
 void sampleDevices()
@@ -221,23 +265,3 @@ void logDevices()
       clock.setAlarm2Delta(minA2);
 }
 
-void parseResponse()
-{
-  #ifdef XBEE_ENABLE
-  int index = (int)xbee.getResponseLength();
-  uint8_t dataByte = 0;
-  for(int i=0; i<index; i++){
-      dataByte = xbee.getResponseByte(i);
-
-      Serial.println("here comes data:");
-      Serial.println(dataByte, HEX);
-
-
-  }
-
-
-
-
-
-  #endif
-}
