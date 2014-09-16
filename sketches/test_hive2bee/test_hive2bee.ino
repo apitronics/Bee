@@ -18,21 +18,47 @@
 #define XBEE_ENABLE
 
 
-#define DSB1820B_UUID 0x0018
-#define DSB1820B_LENGTH_OF_DATA 2
-#define DSB1820B_SCALE 100
-#define DSB1820B_SHIFT 50
-
-//counts number of Transmission Errors (TR)
-#define TR_UUID 0x0003
-#define RR_max 10    //maximum number of retries Xbee attempts before reporting error - this is the scalar
+ //maximum number of retries Xbee attempts before reporting error - this is the scalar
 const int maxRetries = 5;  //how many times we attempt to send packets
-
+// const uint16_t BEE_UUID = 0x8000;
 byte minA1 = 0;
 byte secA1 = 30;
 byte minA2 = 1;
 
 
+
+
+void setup()
+{
+  BeeDevice myBee;
+  Serial.begin(57600);
+  Serial.println("start this Bee up!");
+  
+  Serial.print("sample rate: ");
+  Serial.print(myBee.getSampleMin());
+  Serial.print(":");
+  Serial.println(myBee.getSampleSecR());
+
+  Serial.print("log rate: ");
+  Serial.print(myBee.getLogMin());
+  Serial.println(":00");
+
+  Serial.print("sleep: ");
+  Serial.println(myBee.isSleepEnable());
+
+  minA1 = myBee.getSampleMin();
+  secA1 = myBee.getSampleSecR();
+  minA2 = myBee.getLogMin();
+
+
+
+}
+
+void loop()
+{
+  
+
+}
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 boolean sendIDPacket(uint8_t * pointer, uint8_t length){
@@ -62,20 +88,7 @@ boolean sendDataPacket(uint8_t * arrayPointer, uint8_t arrayLength){
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-void setup()
-{
-  BeeDevice myBee;
-}
-
-void loop()
-{
-  
-
-}
-
-
-
-bool look4Response()
+bool waitforResponse()
 {
   const int timeout_ms = 2000;
   unsigned int refreshCntr = 0;
@@ -89,7 +102,7 @@ bool look4Response()
         refreshCntr++;
         if (refreshCntr >= timeout_ms){
           return false;
-          break;
         }
       }
+  return false;
 }

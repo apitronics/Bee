@@ -34,11 +34,14 @@
    {
     return (uint8_t)(_sampl_sec % 60);
    }
+   uint16_t getLogMin()
+   {
+    return _log_min;
+   }
    bool isSleepEnable()
    {
     return (bool)(_beeCTRL & 0x01);
    }
-   uint8_t
 
   private:
     uint16_t _UUID;
