@@ -27,6 +27,9 @@ class XBeePlus
 		bool CTS();
 		void meetCoordinator();
 		void hardReset();
+		uint8_t getResponseLength();
+		uint8_t getResponseByte(int index);
+
 	private:
 		ZBTxStatusResponse txStatus;
 		XBeeAddress64 addr64;

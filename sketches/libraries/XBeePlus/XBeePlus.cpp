@@ -112,6 +112,20 @@ uint8_t * XBeePlus::getData(){
 	return &data[0];
 }
 
+uint8_t XBeePlus::getDataLength()
+{
+	_xbee.getResponse().getZBRxResponse(rx);
+	return rx.getDataLength();
+}
+uint8_t getResponseByte(int index)
+{
+	_xbee.getResponse().getZBRxResponse(rx);
+	return rx.getData(index);
+}
+
+
+
+
 #define ID_FRAME 0b0001
 #define DATA_FRAME 0b0010
 

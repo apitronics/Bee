@@ -183,7 +183,7 @@ void loop(){
   
   if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
     xbee.enable();
-    Serial.println("Creating datapoint from samples");
+    Serial.println("Logging datapoint from samples");
     sensorhub.log(true);
     #ifdef XBEE_ENABLE
     sendDataPacket(&sensorhub.data[0], sensorhub.getDataSize());
