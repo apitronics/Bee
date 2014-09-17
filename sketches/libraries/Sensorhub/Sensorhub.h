@@ -138,7 +138,7 @@ class Sensor
 class Sensorhub
 {
 	private:
-		Sensor** sensors;
+		
 		uint8_t _size;
 		uint8_t sizeOfData;
 		const uint8_t _findTotalSize(){
@@ -166,10 +166,13 @@ class Sensorhub
 			
 			for(uint8_t i=0; i<_size; i++){
 				uint16_t uuid = sensors[i]->getUUID();
-				ids[i*UUID_WIDTH]=uuid<<8;
+				//Serial.println(uuid,HEX);
+				ids[i*UUID_WIDTH]=uuid>>8;
+				//Serial.println(ids[i*UUID_WIDTH]);
 				ids[i*UUID_WIDTH+1]=uuid;
 			}
 		}
+		Sensor** sensors;
 
 		void init(){
 			for (int i=0; i<_size;i++) sensors[i]->init();

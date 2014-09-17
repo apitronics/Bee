@@ -1,5 +1,5 @@
 //Apitronics - hive2bee.ino
-//9-16-2014
+//9-17-2014
 // demonstrate read service with BeeDevice
 
 #include <Clock.h>
@@ -73,12 +73,22 @@ void setup()
   Serial.begin(57600);
   xbee.begin(57600);
   //xbee.hardReset();
-  Serial.print("Initialized: serial");  
+  Serial.println("");
+  Serial.println("===============================================");
+  Serial.print("Initialized: serial");
+
+  
   clock.begin(date);
   configureSleep();
   Serial.print(", clock");  
   sensorhub.init();
-  Serial.println(", sensors");
+  Serial.print(", sensors ");
+  for(int i=0; i<NUM_SENSORS; i++){
+      Serial.print(sensorhub.sensors[i]->getUUID(), HEX);
+      Serial.print(" ");
+  }
+  Serial.println("");
+
 
   initBee();
 
@@ -185,34 +195,42 @@ bool waitforResponse(uint16_t timeout_ms = 2000)
 {
   unsigned int refreshCntr = 0;
   xbee.refresh();
-      Serial.print("waiting for response");
+    Serial.print("waiting for response");
       while(!xbee.available()){
         xbee.refresh();
         Serial.print(".");
         delay(1);
-        return true;
         refreshCntr++;
         if (refreshCntr >= timeout_ms){
+          Serial.println("timeout");
           return false;
         }
       }
-  return false;
+    uint8_t responseID = xbee.getResponseApiID();
+    Serial.println(responseID, HEX);
+    if(responseID == 0x90){
+      xbee.pullData();
+      return true;      
+    }
+    else {
+      Serial.print(" wrong api id");
+      return false;
+    }
 }
 
 
 
 void parseResponse()
 {
-  #ifdef XBEE_ENABLE
   int index = (int)xbee.getResponseLength();
   uint8_t dataByte = 0;
+  Serial.println("received data:");
   for(int i=0; i<index; i++){
       dataByte = xbee.getResponseByte(i);
-
-      Serial.println("here comes data:");
-      Serial.println(dataByte, HEX);
+      Serial.print(dataByte, HEX);
+      Serial.print(" ");
   }
-  #endif
+  Serial.println("");
 }
 
 

@@ -29,6 +29,9 @@ class XBeePlus
 		void hardReset();
 		uint8_t getResponseLength();
 		uint8_t getResponseByte(int index);
+		uint8_t getResponseApiID();
+		void resetData();
+		void pullData();
 
 	private:
 		ZBTxStatusResponse txStatus;

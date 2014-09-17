@@ -114,20 +114,33 @@ uint8_t * XBeePlus::getData(){
 
 uint8_t XBeePlus::getResponseLength()
 {
-	_xbee.getResponse().getZBRxResponse(rx);
 	return rx.getDataLength();
 }
 uint8_t XBeePlus::getResponseByte(int index)
 {
-	_xbee.getResponse().getZBRxResponse(rx);
 	return rx.getData(index);
+}
+
+uint8_t XBeePlus::getResponseApiID()
+{
+	return _xbee.getResponse().getApiId();
+}
+
+void XBeePlus::resetData()
+{
+	_xbee.resetResponse();
+}
+
+void XBeePlus::pullData()
+{
+	_xbee.getResponse().getZBRxResponse(rx);
 }
 
 
 
 
-#define ID_FRAME 0b0001
-#define DATA_FRAME 0b0010
+#define ID_FRAME 0b0001 //OXO1
+#define DATA_FRAME 0b0010 //OXO2
 
 bool XBeePlus::sendIDs(uint8_t * arrayPointer, uint8_t arrayLength){
 	addr64.setMsb(0x0);

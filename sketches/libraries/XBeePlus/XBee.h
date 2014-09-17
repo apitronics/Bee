@@ -86,7 +86,7 @@
 #define AT_COMMAND_REQUEST 0x08
 #define AT_COMMAND_QUEUE_REQUEST 0x09
 #define REMOTE_AT_REQUEST 0x17
-#define ZB_TX_REQUEST 0x10
+#define ZB_TX_REQUEST 0x10  //this is transmit
 #define ZB_EXPLICIT_TX_REQUEST 0x11
 #define RX_64_RESPONSE 0x80
 #define RX_16_RESPONSE 0x81
@@ -95,7 +95,7 @@
 #define AT_RESPONSE 0x88
 #define TX_STATUS_RESPONSE 0x89
 #define MODEM_STATUS_RESPONSE 0x8a
-#define ZB_RX_RESPONSE 0x90
+#define ZB_RX_RESPONSE 0x90  //this is response
 #define ZB_EXPLICIT_RX_RESPONSE 0x91
 #define ZB_TX_STATUS_RESPONSE 0x8b
 #define ZB_IO_SAMPLE_RESPONSE 0x92
@@ -723,13 +723,13 @@ public:
 	 * Specify the serial port.  Only relevant for Arduinos that support multiple serial ports (e.g. Mega)
 	 */
 	void setSerial(Stream &serial);
+	void resetResponse();
 private:
 	bool available();
 	uint8_t read();
 	void flush();
 	void write(uint8_t val);
 	void sendByte(uint8_t b, bool escape);
-	void resetResponse();
 	XBeeResponse _response;
 	bool _escape;
 	// current packet position for response.  just a state variable for packet parsing and has no relevance for the response otherwise
