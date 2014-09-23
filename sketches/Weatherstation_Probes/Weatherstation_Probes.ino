@@ -1,3 +1,6 @@
+//Apitronics - Weatherstation_Probes.ino
+//9/23/2014
+
 #include <Clock.h>
 #include <Onboard.h>
 #include <XBeePlus.h>
@@ -6,7 +9,8 @@
 #include <Bee.h>
 #include <WeatherPlug.h>
 
-//#define XBEE_ENABLE
+#define NUM_SAMPLES 32
+#define XBEE_ENABLE
 
 #define EC5_HUMIDITY_UUID 0x17
 #define EC5_LENGTH_OF_DATA 2
@@ -88,14 +92,18 @@ DSB1820B dsb;
 Sensor * sensor[] = {&onboardTemp, &batteryGauge, &BMP_temp,&BMP_press, &windDir, &windSpeed, &rainfall, &sht_temp, &sht_rh, &ec5, &dsb};
 Sensorhub sensorhub(sensor,NUM_SENSORS);
 
+const int maxRetries = 5;  //how many times we attempt to send packets
 
+const byte minA1 = 0;
+const byte secA1 = 30;
+const byte minA2 = 15;
 
 void setup(){
   delay(1000);
   pinMode(5,OUTPUT);
   digitalWrite(5,HIGH);
   Serial.begin(57600);
-  xbee.begin(9600);
+  xbee.begin(57600);
   Serial.print("Initialized: serial");
   
   clock.begin(date);
@@ -106,23 +114,45 @@ void setup(){
   Serial.println(", sensors");
   
   #ifdef XBEE_ENABLE
-  Serial.print("Connecting to Hive...");
-  //send IDs packet until reception is acknowledged
-  while(!xbee.sendIDs(&sensorhub.ids[0], UUID_WIDTH*NUM_SENSORS));
-  Serial.print(" Hive received packet...");
-  //wait for message from Coordinator
   
- 
-  xbee.refresh();
-  while(!xbee.available()){
-    xbee.refresh();
-  }
+  const int refreshPeriod = 2000;
+  bool connected2Hive = false;
+  unsigned int refreshCntr = 0;
+  do
+      {
+      Serial.println("Connecting to Hive...");
+      //send IDs packet until reception is acknowledged'
+      while(!sendIDPacket(&sensorhub.ids[0],UUID_WIDTH*NUM_SENSORS));  
+      Serial.println(" Hive received packet...");
+      //wait for message from Coordinator
+      xbee.refresh();
+      Serial.print("refreshing");
+      while(!xbee.available()){
+        xbee.refresh();
+        Serial.print(".");
+        delay(1);
+        connected2Hive = true;
+        refreshCntr++;
+        if (refreshCntr % refreshPeriod == 0){
+          if (refreshCntr >= (refreshPeriod*3)){
+              clock.setAlarm2Delta(minA2);
+              xbee.hardReset();
+              sleep();
+              refreshCntr = 0;        
+           }
+          connected2Hive = false;
+          break;
+        }
+      }
+  } while(!connected2Hive);
+  
+  
+  Serial.println("done");
   xbee.meetCoordinator();
   
   Serial.println(" Hive address saved.");
   #endif
   Serial.println("Launching program.");
-  
 }
 
 
@@ -133,25 +163,42 @@ void loop(){
   bool buttonPressed =  !clock.triggeredByA2() && !clock.triggeredByA1() ;
   clock.print();
   if( clock.triggeredByA1() ||  buttonPressed || firstRun){
-    Serial.print("Sampling sensors");
+    Serial.println("Sampling sensors:");
     sensorhub.sample(true);
-    clock.setAlarm1Delta(0,15);
+    clock.setAlarm1Delta(minA1, secA1);
   }
-  
   if( ( clock.triggeredByA2() ||  buttonPressed ||firstRun)){
     xbee.enable();
     Serial.println("Creating datapoint from samples");
     sensorhub.log(true);
     #ifdef XBEE_ENABLE
-    while(!xbee.sendData(&sensorhub.data[0], sensorhub.getDataSize()));
+    sendDataPacket(&sensorhub.data[0], sensorhub.getDataSize());
     #endif
-    clock.setAlarm2Delta(10);
+    clock.setAlarm2Delta(minA2);
   }
   firstRun=false;
   weatherPlug.sleep();
-  #ifdef XBEE_ENABLE
   xbee.disable();
-  #endif
   sleep();  
 }
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+boolean sendIDPacket(uint8_t * pointer, uint8_t length){
+    for(int i=0; i<maxRetries;i++){
+      if( xbee.sendIDs(pointer, length) ) {
+        return true;
+      }
+    }
+    clock.setAlarm2Delta(minA2);
+    sleep();
+    return false;
+}
+
+boolean sendDataPacket(uint8_t * arrayPointer, uint8_t arrayLength){
+    for(int i=0; i<maxRetries;i++){ 
+      if( xbee.sendData(arrayPointer, arrayLength) ) {
+        return true;
+      }
+    }
+    return false;
+}
