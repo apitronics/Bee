@@ -57,7 +57,7 @@ class DSB1820B: public Sensor
                 }
                 void getData(){
                   
-                  weatherPlug.i2cChannel(2);
+                  weatherPlug.i2cChannel(0);
                   weatherPlug.disableI2C();
                   dsb.begin();
                   
@@ -67,10 +67,11 @@ class DSB1820B: public Sensor
                   data[1]=tmp>>8;
                   data[0]=tmp;
                   weatherPlug.enableI2C();
-                  weatherPlug.i2cChannel(1);
+                 // weatherPlug.i2cChannel(1);
                 }
 
 };
+
 
 
 #define NUM_SAMPLES 32
