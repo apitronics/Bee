@@ -55,4 +55,8 @@ Now you're good to go!
 #Improvements to Think of
 * changing sample rates (and other settings) remotely
 * add automation to framework; how does it interact with sensors?
+* 
+
+##License
+Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
 
