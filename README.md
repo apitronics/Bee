@@ -58,5 +58,5 @@ Now you're good to go!
 * 
 
 ##License
-Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+GNU GPL v3.0
 
