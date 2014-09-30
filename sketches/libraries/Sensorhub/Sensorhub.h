@@ -10,18 +10,92 @@ class Buffer
 		Buffer(){
 
 		};
-		
+
+		uint8_t ** _ptrData;
+		char **_ptrTimestamp; 
+		uint8_t _maxSamples; 
+		uint8_t _dataSize; 
+		uint8_t _lengthOfTimestamp;
+
+		uint8_t _sampleCount=0;
+
+
+
+		uint8_t getSampleCount(void){
+			return _sampleCount;
+		}
+
+		void countSample(){
+			_sampleCount++;
+		}
+
+		void resetSampleCount(){
+			_sampleCount = 0;
+		}
+
 		void setup(){}
 
-		void init(uint8_t **ptrData, uint8_t maxSamples, uint8_t dataSize, uint8_t lengthOfTimeStamp){
-			int x=0;
+		void init(uint8_t **ptrData, char **ptrTimestamps, uint8_t maxSamples, uint8_t dataSize, uint8_t lengthOfTimestamp){
+			_ptrData=ptrData;
+			_ptrTimestamp=ptrTimestamps;
+			_maxSamples = maxSamples;
+			_dataSize = dataSize;
+			_lengthOfTimestamp = lengthOfTimestamp;
+
+			String defaultTime = "00:00:00, 00/00/00";
 			for(int i=0; i<maxSamples;i++){
-				for(int j=0; j<dataSize;j++){
-					ptrData[i][j]=x++;
-					Serial.println(ptrData[i][j]);
+				for(int j=0; j<lengthOfTimestamp; j++){
+					ptrTimestamps[i][j]=defaultTime[j];
+				}
+				for(int j=0; j<dataSize; j++){
+					ptrData[i][j]=0;
 				}
 			}
 		}
+
+		void printAll(){
+			for(int i=0; i<_maxSamples;i++){
+				for(int j=0; j<_lengthOfTimestamp; j++){
+					Serial.write(_ptrTimestamp[i][j]);
+				}
+				Serial.print(": ");
+				for(int j=0; j<_dataSize; j++){
+					Serial.print(_ptrData[i][j]);
+					if(j!=_dataSize-1) Serial.print(", ");
+				}
+				Serial.println();
+			}
+		}
+
+		void print(){
+			for(int i=0; i<getSampleCount();i++){
+				for(int j=0; j<_lengthOfTimestamp; j++){
+					Serial.write(_ptrTimestamp[i][j]);
+				}
+				Serial.print(": ");
+				for(int j=0; j<_dataSize; j++){
+					Serial.print(_ptrData[i][j]);
+					if(j!=_dataSize-1) Serial.print(", ");
+				}
+				Serial.println();
+			}
+		}
+
+		void save(String timestamp, uint8_t * data){
+			if(getSampleCount()<_maxSamples){
+				for(int j=0; j<_lengthOfTimestamp; j++){
+					_ptrTimestamp[getSampleCount()][j]=timestamp[j];
+				}
+				for(int j=0; j<_dataSize; j++){
+					_ptrData[getSampleCount()][j]=data[j];
+				}
+				countSample();
+			}
+			else{
+				Serial.println("Too many samples - need to transmit");
+			}
+		}
+
 };
 
 /*
