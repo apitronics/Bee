@@ -3,6 +3,76 @@
 
 #include "Arduino.h"
 
+
+class Buffer
+{
+	public:
+		Buffer(){
+
+		};
+		
+		void setup(){}
+
+		void init(uint8_t **ptrData, uint8_t maxSamples, uint8_t dataSize, uint8_t lengthOfTimeStamp){
+			int x=0;
+			for(int i=0; i<maxSamples;i++){
+				for(int j=0; j<dataSize;j++){
+					ptrData[i][j]=x++;
+					Serial.println(ptrData[i][j]);
+				}
+			}
+		}
+};
+
+/*
+class Buffer
+{
+	public:
+
+		uint8_t sampleCount = 0;
+
+		uint8_t** _data[MAX_SAMPLES];
+		uint16_t _bytesPerSample;
+
+		char** _timeStamps[MAX_SAMPLES];
+
+
+		uint8_t _lengthOfTimestamp;
+
+		Buffer(uint8_t* data, uint16_t bytesPerSample, char* timeStamps, uint16_t lengthOfTimeStamps, uint16_t maxSamples){
+
+			_data[0] = data;
+			_bytesPerSample = bytesPerSample;
+
+			_timeStamps[0] = timeStamps;
+			_lengthOfTimestamp = lengthOfTimeStamps;
+		}
+
+		void init(){
+			String defaultTime = "00:00:00, 00/00/00";
+			int k=0;
+			for(int i=0; i<MAX_SAMPLES; i++){
+				defaultTime.toCharArray(_timeStamps[i],_lengthOfTimestamp);
+				for(int j=0; j<_bytesPerSample; j++){
+					_data[i][j] = k++;
+					Serial.println(_data[i][j]);
+				} 
+			}
+		}
+
+		void print(){
+			for(int i=0; i<MAX_SAMPLES; i++){
+				//for(int j=0; j<_lengthOfTimestamp; j++) Serial.write(_timeStamps[i][j]);
+				//Serial.write(": ");
+				for(int j=0; j<_bytesPerSample; j++){
+					Serial.print(_data[i][j]);
+					if(j!=_bytesPerSample-1) Serial.write(", ");
+				}
+				Serial.println();
+			}
+		}
+};*/
+
 //need to figure out how to allow instances to allocate these sizes
 #define MAX_DATA_SIZE 32 //bytes
 #define MAX_SENSORS 32 //sensors
