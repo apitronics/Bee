@@ -19,8 +19,6 @@ class Buffer
 
 		uint8_t _sampleCount=0;
 
-
-
 		uint8_t getSampleCount(void){
 			return _sampleCount;
 		}
@@ -55,7 +53,7 @@ class Buffer
 
 		void printAll(){
 			for(int i=0; i<_maxSamples;i++){
-				for(int j=0; j<_lengthOfTimestamp; j++){
+				for(int j=0; j<_lengthOfTimestamp-1; j++){
 					Serial.write(_ptrTimestamp[i][j]);
 				}
 				Serial.print(": ");
@@ -69,7 +67,7 @@ class Buffer
 
 		void print(){
 			for(int i=0; i<getSampleCount();i++){
-				for(int j=0; j<_lengthOfTimestamp; j++){
+				for(int j=0; j<_lengthOfTimestamp-1; j++){
 					Serial.write(_ptrTimestamp[i][j]);
 				}
 				Serial.print(": ");
@@ -253,8 +251,6 @@ class Sensor
 			Serial.println(getUnits());
 		}
 		
-			
-
 		uint8_t data[MAX_DATA_SIZE];
 		uint16_t getUUID() { return _uuid; }
 		uint8_t getSize() { return _size; }

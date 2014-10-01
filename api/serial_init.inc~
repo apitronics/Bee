@@ -29,9 +29,8 @@ SERIAL_DEFINE(Serial2, D, 0);
 SERIAL_DEFINE(Serial3, D, 1);
 SERIAL_DEFINE(Serial4, E, 0);
 //i'd like to not implement these
-/*
 SERIAL_DEFINE(Serial5, E, 1);
 SERIAL_DEFINE(Serial6, F, 0);
-SERIAL_DEFINE(Serial7, F, 1);*/
+SERIAL_DEFINE(Serial7, F, 1);
 
 

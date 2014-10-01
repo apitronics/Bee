@@ -18,7 +18,7 @@ Sensor * sensor[] = {&onboardTemp, &batteryGauge};
 Sensorhub sensorhub(sensor,NUM_SENSORS);
 
 #define DEBUG
-#define XBEE_ENABLE
+//#define XBEE_ENABLE
 
 void setup(){  
   xbee.begin(9600);
