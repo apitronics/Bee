@@ -43,10 +43,10 @@ void sleep(){
 	clock.getFlags();
 	
 	//battery needs to be protected from overextension	
-	while(onboard.getBatt()<8.5) {	
+	while(onboard.getBatt()<8.35) {	
 		Serial.println("I have low battery!");
 		clock.setAlarm1Delta(0,5);
-
+		clock.setAlarm2Delta(1);
 		state = PWR_DOWN;
 		set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 		while(!I2C_READY()); //important to stay here until alarm is configured to avoid going to sleep

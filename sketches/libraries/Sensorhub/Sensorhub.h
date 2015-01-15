@@ -146,8 +146,8 @@ class Buffer
 };*/
 
 //need to figure out how to allow instances to allocate these sizes
-#define MAX_DATA_SIZE 32 //bytes
-#define MAX_SENSORS 32 //sensors
+#define MAX_DATA_SIZE 4 //bytes
+#define MAX_SENSORS 12 //sensors
 #define UUID_WIDTH 2 //bytes
 
 /*TODO:
@@ -211,7 +211,7 @@ class Sensor
 
 		//simple averaging of the samples
 		//debug set print to true
-		void log(bool print=false){
+		void hold(bool print=false){
 			//we could do this averaging operation on the array itself
 			//but right now let's assume the largest data is 32 bits
 			if(!_logIsSample){
@@ -222,7 +222,6 @@ class Sensor
 				}
 				
 				result/=_count;			//and divide the big number
-				
 				_count=0;
 				for (int i=0; i<_size; i++){
 					data[i]= result >> 8*i;	//put the average piece out in data
@@ -325,14 +324,14 @@ class Sensorhub
 
 		uint8_t data[MAX_DATA_SIZE*MAX_SENSORS];//this implies that we are limited to 32 sensors at the moment
 		uint8_t ids[UUID_WIDTH*MAX_SENSORS];
-		void log(bool print = false){
+		void hold(bool print = false){
 			uint16_t index = 0;
 			for (int i=0; i<_size;i++) {
-				sensors[i]->log(print);
+				sensors[i]->hold(print);
 				uint8_t sensorDataSize = sensors[i]->getSize();
 				//flipping MSB and LSB!
 				for (int j=sensorDataSize-1; j>=0 ;j--){
-					data[index++] = sensors[i]->data[j];	
+					data[index++] = sensors[i]->data[j];
 				}
 			}
 			_count=0;
