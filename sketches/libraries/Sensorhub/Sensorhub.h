@@ -53,7 +53,7 @@ class Buffer
 
 		void printAll(){
 			for(int i=0; i<_maxSamples;i++){
-				for(int j=0; j<_lengthOfTimestamp-1; j++){
+				for(int j=0; j<_lengthOfTimestamp; j++){
 					Serial.write(_ptrTimestamp[i][j]);
 				}
 				Serial.print(": ");
@@ -67,7 +67,7 @@ class Buffer
 
 		void print(){
 			for(int i=0; i<getSampleCount();i++){
-				for(int j=0; j<_lengthOfTimestamp-1; j++){
+				for(int j=0; j<_lengthOfTimestamp; j++){
 					Serial.write(_ptrTimestamp[i][j]);
 				}
 				Serial.print(": ");
