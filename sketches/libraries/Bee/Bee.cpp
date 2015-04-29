@@ -43,7 +43,7 @@ void sleep(){
 	clock.getFlags();
 	
 	//battery needs to be protected from overextension	
-	while(onboard.getBatt()<8.35) {	
+	while(onboard.getBatt()<6.25) {	
 		Serial.println("I have low battery!");
 		clock.setAlarm1Delta(0,5);
 		clock.setAlarm2Delta(1);
